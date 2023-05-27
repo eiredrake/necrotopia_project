@@ -1,0 +1,2 @@
+docker volume rm necrotopia_project_static_volume
+docker volume rm necrotopia_project_necrotopia_db_volume

@@ -1,0 +1,1 @@
+docker exec -it necrotopia_project-db-1 /bin/bash

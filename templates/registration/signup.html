@@ -1,0 +1,12 @@
+{% extends "necrotopia/base.html" %}
+
+{% block title %}Create an Account{% endblock %}
+
+{% block content %}
+    <H1>Register!</H1>
+    <form method="POST" class="form-group">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Register</button>
+    </form>
+{% endblock %}

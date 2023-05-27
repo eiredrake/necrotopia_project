@@ -1,0 +1,1 @@
+"C:\Program Files\PostgreSQL\15\bin\pg_dump.exe" --verbose --host=localhost --port=5432 --username=necrotopia_user --format=p --inserts --clean --create --file "D:\Projects\Python\necrotopia_project\db\scripts\dump-necrotopia_db-current.sql" -n "public" necrotopia_db

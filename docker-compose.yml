@@ -1,0 +1,47 @@
+version: '4.0'
+
+x-restart-policy: &restart_policy
+  restart: unless-stopped
+
+
+services:
+  db:
+#    << : *restart_policy
+    build:
+      dockerfile: db_Dockerfile
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_HOST_PORT=${DB_HOST_PORT}
+    ports:
+      - "${DB_HOST_PORT}:5432"
+    volumes:
+      - necrotopia_db_volume:/var/lib/postgresql/data
+
+  web:
+#    << : *restart_policy
+    build:
+      dockerfile: web_Dockerfile
+    command: gunicorn necrotopia_project.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - static_volume:/necrotopia_web/static
+      - media_volume:/necrotopia_web/media
+    ports:
+      - 8000:8000
+    expose:
+      - 8000
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+volumes:
+  media_volume:
+    driver: local
+  static_volume:
+    driver: local
+  necrotopia_db_volume:
+    driver: local

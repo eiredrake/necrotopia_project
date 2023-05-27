@@ -1,0 +1,7 @@
+FROM postgres:15.0
+
+RUN echo '===================FUCKING DATABASE START==================='
+
+# COPY db/scripts/* /docker-entrypoint-initdb.d/
+
+RUN echo '===================FUCKING DATABASE END==================='
