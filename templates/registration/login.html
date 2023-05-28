@@ -1,29 +1,106 @@
 {% extends "necrotopia/base.html" %}
+{% load static %}
+{% load bootstrap5 %}
 
 {% block content %}
+    <div id="id_dialog_container" class="container-sm justify-content-center w-25">
+        <div id="id_dialog_body" class="row bg-success border border-dark rounded b-5 shadow">
+            <div id="id_dialog_title_strip" class="row">
+                <div class="pl-2">Login to {{ title }}</div>
+            </div>
+            <div id="id_dialog_message_body" class="bg-light rounded-bottom">
+                <form action="{% url 'login' %}" method="post">
+                    {% csrf_token %}
+                    <div id="id_username_row" class="row">
+                        <div class="row">
+                            <label for="username" class="col control-label text-left">Username:</label>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <input name="username" value="" type="text" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="id_password_row" class="row">
+                        <div class="row">
+                            <label for="password" class="col control-label text-left">Password:</label>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <input name="password" type="password" class="form-control"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="id_remember_me_row" class="row">
+                        <div class="col">
+                            <input name="remember_me" class="form-check_input" type="checkbox" value="" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">Remember Me</label>
+                        </div>
+                    </div>
+                    <div id="id_button_row" class="row pb-2 float-right">
+                        <div class="col pull-right">
+                            <input name="login" type="submit" value="Login" class="btn btn-success"/>
+                        </div>
+                    </div>
+                </form>
+            </div>
 
-{% if form.errors %}
-<p>Your username and password didn't match. Please try again.</p>
-{% endif %}
+        </div>
+        {# shadow p-3 mb-5 bg-body rounded#}
 
-{% if next %}
-    {% if user.is_authenticated %}
-    <p>Your account doesn't have access to this page. To proceed,
-    please login with an account that has access.</p>
-    {% else %}
-    <p>Please login to see this page.</p>
-    {% endif %}
-{% endif %}
+        {#        <div class="row">#}
+        {#            <div class="col">#}
+        {#                <div class="row md-auto title_band pl-2">#}
+        {#                    #}
+        {#                </div>#}
+        {#                <div class="row md-auto bg-light">#}
+        {#                    <form action="{% url 'login' %}" method="post">#}
+        {#                        {% csrf_token %}#}
+        {#                        <div class="row container-fluid">#}
+        {#                            <row class="w-100">#}
+        {#                                <div class="col-4">#}
+        {#                                    <label for="username" class="col control-label text-left">Username:</label>#}
+        {#                                    <div class="col-100">#}
+        {#                                        <input name="username" value="" type="text" class="form-control"/>#}
+        {#                                    </div>#}
+        {#                                </div>#}
+        {#                                <div class="col-4">#}
+        {#                                    <label for="password" class="col control-label text-left">Password:</label>#}
+        {#                                </div>#}
+        {#                            </row>#}
+        {#                        </div>#}
 
-<form method="post" action="{% url 'login' %}">
-{% csrf_token %}
 
-
-<input type="hidden" name="next" value="{{ next }}">
-<button type="submit" class="btn btn-success">Login</button>
-</form>
-
-{# Assumes you setup the password_reset view in your URLconf #}
-{#<p><a href="{% url 'password_reset' %}">Lost password?</a></p>#}
+        {#                        <div class="col-md-8 col-md-offset-2">#}
+        {#                            <div class="panel panel-default">#}
+        {#                                <div class="panel-body">#}
+        {#                                    {% if error_message %}#}
+        {#                                        <p class="bg-danger p-d ml-b">{{ error_message }}</p>#}
+        {#                                    {% endif %}#}
+        {#                                    <div class="form-group clearfix">#}
+        {#                                        <label for="username"  class="col-md-4 control-label text-left">Username:</label>#}
+        {#                                        <div class="col w-100">#}
+        {#                                            <input name="username" value="" type="text" class="form-control"/>#}
+        {#                                        </div>#}
+        {#                                    </div>#}
+        {#                                    <div class="form-group clearfix">#}
+        {#                                        <label for="password" class="col-md-4 control-label text-left">Password:</label>#}
+        {#                                        <div class="col">#}
+        {#                                            <input name="password" type="password" class="form-control"/>#}
+        {#                                        </div>#}
+        {#                                    </div>#}
+        {#                                    <div class="col-md-6 col-md-offset-4">#}
+        {#                                        <input name="login" type="submit" value="Login" class="btn btn-success"/>#}
+        {#                                        #}
+        {#                            <a href="/mymodule/register">or Register</a>#}
+        {#                                    </div>#}
+        {#                                </div>#}
+        {#                            </div>#}
+        {#                        </div>#}
+        {#                    </form>#}
+        {#                </div>#}
+        {#            </div>#}
+        {#        </div>#}
+    </div>
 
 {% endblock %}

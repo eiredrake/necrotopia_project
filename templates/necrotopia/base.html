@@ -47,43 +47,49 @@
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" href="{{ home }}">Home</a>
             </li>
-
-
               {% if user.is_authenticated %}
+                  <!-- USER IS LOGGED IN -->
                 <li class="nav-item">
-                  <a class="nav-link" href="{{ logout }}">Logout [{{ user.username }}]</a>
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        {% if rediect_field_value %}
+                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+                        {% endif %}
+                        <button class="nav-link navbar-text logout_button necrotopia-navbar-dark necrotopia-navbar-text-dark" type="submit"><i class="fa-solid fa-user right_padding"></i>Log Out [{{ user.username }}]</button>
+                    </form>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="#">Profile</a>
                 </li>
-              {% else %}
-{#                <li class="nav-item dropdown">#}
-{#                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">#}
-{#                    Login/Registration#}
-{#                  </a>#}
-{#                  <ul class="dropdown-menu main_body" aria-labelledby="navbarDropdownMenuLink">#}
-{#                    <li><a class="dropdown-item" href="{% url 'login' %}">Login</a></li>#}
-{#                    <li><a class="dropdown-item" href="{% url 'register' %}">Register</a></li>#}
-{#                  </ul>#}
-{#                </li>#}
-
-                <li class="nav-item">
-                  <a class="nav-link" href="#">Logout [eiredrake]</a>
-                </li>
-
                 <li class="nav-item dropdown">
                   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Player Services
                   </a>
                   <ul class="dropdown-menu main_body" aria-labelledby="navbarDropdownMenuLink">
-                    <li><a class="dropdown-item" href="{% url 'login' %}">Login</a></li>
-                    <li><a class="dropdown-item" href="{% url 'register' %}">Register</a></li>
+                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Operations</a></li>
                   </ul>
                 </li>
 
                 <li class="nav-item dropdown">
                   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Staff Services
+                  </a>
+                  <ul class="dropdown-menu main_body" aria-labelledby="navbarDropdownMenuLink">
+                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Operations</a></li>
+                  </ul>
+                </li>
+              {% else %}
+                  <!-- USER IS NOT LOGGED IN -->
+                <li class="nav-item dropdown">
+
+
+
+
+
+
+
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Login/Registration
                   </a>
                   <ul class="dropdown-menu main_body" aria-labelledby="navbarDropdownMenuLink">
                     <li><a class="dropdown-item" href="{% url 'login' %}">Login</a></li>
@@ -108,6 +114,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 {#    <body class="main_body">#}

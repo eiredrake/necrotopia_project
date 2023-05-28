@@ -1,0 +1,136 @@
+{% extends "necrotopia/base.html" %}
+
+{% load static %}
+{% load bootstrap5 %}
+
+
+{% block title %}Create an Account{% endblock %}
+
+{% block content %}
+<div class="container-fluid d-flex justify-content-center">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row md-auto">
+                            <div class="col-1"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div class="col d-flex text-left">Items Expiring!</div>
+                            <div class="col text-right"><i class="fa-solid fa-circle-xmark"></i></div>
+                        </div>
+
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">The following items in wallet 'bob's wallet' are expiring this month</h5>
+                        <table>
+                            <tr>
+                                <th>Item</th>
+                                <th>Crafts Level</th>
+                                <th>Item Type</th>
+                            </tr>
+                            <tr>
+                                <td>Mr Slappy</td>
+                                <td>Master</td>
+                                <td>Projectile Weapon</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row md-auto">
+                            <div class="col text-left">Unread Messages Waiting (4)</div>
+                            <div class="col text-right"><i class="fa-solid fa-circle-xmark"></i></div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <tr>
+                                <th>User</th>
+                                <th>Title</th>
+                                <th>Sent</th>
+                            </tr>
+                            <tr>
+                                <td>eiredrake</td>
+                                <td>Wow this is some cool shit.</td>
+                                <td>5/27/2023 0402</td>
+                            </tr>
+                            <tr>
+                                <td>wlcarden</td>
+                                <td>I know right? This is amazing</td>
+                                <td>5/27/2023 0405</td>
+                            </tr>
+                            <tr>
+                                <td>wlcarden</td>
+                                <td>Look at you! Revolutionizing DR!</td>
+                                <td>5/27/2023 0406</td>
+                            </tr>
+                            <tr>
+                                <td>eiredrake</td>
+                                <td>I wonder what else it can do?</td>
+                                <td>5/27/2023 0408</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row md-auto">
+                            <div class="col text-left">
+                                DR Exchange
+                            </div>
+                            <div class="col text-right">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">Regional averages updated at 1000 today</h6>
+                        <table>
+                            <tr>
+                                <th>Item</th>
+                                <th>Crafts Level</th>
+                                <th>Buy (avg)</th>
+                                <th>Sell (avg)</th>
+                            </tr>
+                            <tr>
+                                <td>Mr Slappy</td>
+                                <td>Master</td>
+                                <td>45</td>
+                                <td>70</td>
+                            </tr>
+                            <tr>
+                                <td>Scrap</td>
+                                <td>Basic</td>
+                                <td>0.5</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>Scrap</td>
+                                <td>Uncommon</td>
+                                <td>0.75</td>
+                                <td>2</td>
+                            </tr>
+                            <tr>
+                                <td>Scrap</td>
+                                <td>Rare</td>
+                                <td>1.0</td>
+                                <td>4</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

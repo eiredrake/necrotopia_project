@@ -63,6 +63,9 @@ INSTALLED_APPS = [
     'necrotopia',
 ]
 
+# url to redirect after successful login
+LOGIN_REDIRECT_URL = '/'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -87,7 +90,7 @@ TEMPLATES = [
                os.path.join(BASE_DIR, 'templates'),
             ]
         ,
-        'APP_DIRS': False,
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
