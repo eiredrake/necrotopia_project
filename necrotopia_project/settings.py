@@ -65,6 +65,7 @@ INSTALLED_APPS = [
 
 # url to redirect after successful login
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

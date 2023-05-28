@@ -50,7 +50,7 @@
               {% if user.is_authenticated %}
                   <!-- USER IS LOGGED IN -->
                 <li class="nav-item">
-                    <form method="POST" action="">
+                    <form method="POST" action="{% url 'logout' %}">
                         {% csrf_token %}
                         {% if rediect_field_value %}
                             <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>

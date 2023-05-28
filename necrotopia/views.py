@@ -13,7 +13,7 @@ from Config import Config
 from necrotopia.forms import LoginForm
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIR
-
+from django.contrib.auth import logout
 
 @require_GET
 @cache_control(max_age=60 * 60 * 24, immutable=True, public=True)  # one day
@@ -41,10 +41,16 @@ def register(request):
     return render(request, template)
 
 
+def log_me_out(request):
+    logout(request)
+    redirect_to = settings.LOGIN_REDIRECT_URL
+
+    return HttpResponseRedirect(redirect_to)
+
+
 def login(request, template_name='registration/login.html', redirect_field_name=REDIRECT_FIELD_NAME, authentication_form=LoginForm):
     redirect_to = settings.LOGIN_REDIRECT_URL
 
-    # redirect_to = request.REQUEST.get(redirect_field_name, '')
     if request.method == "POST":
         form = authentication_form(data=request.POST)
         if form.is_valid():
@@ -80,41 +86,3 @@ def login(request, template_name='registration/login.html', redirect_field_name=
     context.update(new_context)
 
     return render(request=request, template_name=template_name, context=new_context)
-
-
-
-# def login(request):
-#     context = {
-#         "title": GLOBAL_SITE_NAME,
-#     }
-#
-#     if request.method == 'POST':
-#         form = LoginForm(request.POST)
-#         if form.is_valid():
-#         else:
-#             form = LoginForm()
-#
-#         context['form'] = form
-#
-#         render(request, 'registration/login.html', context=context)
-
-
-    #     # Process the request if posted data are available
-    #     username = request.POST['username']
-    #     password = request.POST['password']
-    #     remember_me = request
-    #     # Check username and password combination if correct
-    #     user = authenticate(username=username, password=password)
-    #     if user is not None:
-    #         # Save session as cookie to login the user
-    #         login(request, user)
-    #         # Success, now let's login the user.
-    #         return render(request, 'necrotopia/home.html', context=context)
-    #     else:
-    #         # Incorrect credentials, let's throw an error to the screen.
-    #         context["error_message"] = 'Incorrect username and / or password.'
-    #
-    #         return render(request, 'registration/login.html', context=context)
-    # else:
-    #     # No post data available, let's just show the page to the user.
-    #     return render(request, 'registration/login.html', context=context)
