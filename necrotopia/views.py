@@ -14,6 +14,8 @@ from necrotopia.forms import LoginForm
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIR
 from django.contrib.auth import logout
+from django.contrib import messages
+
 
 @require_GET
 @cache_control(max_age=60 * 60 * 24, immutable=True, public=True)  # one day
@@ -45,6 +47,8 @@ def log_me_out(request):
     logout(request)
     redirect_to = settings.LOGIN_REDIRECT_URL
 
+    messages.success(request, message="You have been logged out")
+
     return HttpResponseRedirect(redirect_to)
 
 
@@ -62,7 +66,10 @@ def login(request, template_name='registration/login.html', redirect_field_name=
             if not form.cleaned_data.get('remember_me'):
                 request.session.set_expiry(0)
 
-            auth_login(request, form.get_user())
+            user = form.get_user()
+            auth_login(request, user)
+
+            messages.success(request, message="You have been logged in as {user}".format(user=user.username))
 
             if request.session.test_cookie_worked():
                 request.session.delete_test_cookie()

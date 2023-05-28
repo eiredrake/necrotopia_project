@@ -1,0 +1,46 @@
+{% if messages %}
+{#    <script type=text/javascript>#}
+{#        toastr.options = {#}
+{#          "closeButton": false,#}
+{#          "debug": false,#}
+{#          "newestOnTop": false,#}
+{#          "progressBar": false,#}
+{#          "positionClass": "toast-bottom-right",#}
+{#          "preventDuplicates": false,#}
+{#          "onclick": null,#}
+{#          "showDuration": "300",#}
+{#          "hideDuration": "1000",#}
+{#          "timeOut": "5000",#}
+{#          "extendedTimeOut": "1000",#}
+{#          "showEasing": "swing",#}
+{#          "hideEasing": "linear",#}
+{#          "showMethod": "fadeIn",#}
+{#          "hideMethod": "fadeOut"#}
+{#        }#}
+{#        toastr.info('WUZUP!')#}
+{#    </script>#}
+
+    {% for message in messages %}
+        {% if message.level_tag == 'success'%}
+            <script type=text/javascript>
+                toastr.options.positionClass = "toast-top-center"
+                toastr.success('{{ message }}')
+            </script>
+        {% elif message.level_tag == 'info' %}
+            <script type=text/javascript>
+                toastr.options.positionClass = "toast-top-center"
+                toastr.info('{{ message }}')
+            </script>
+        {% elif message.level_tag == 'warning' %}
+            <script type=text/javascript>
+                toastr.options.positionClass = "toast-top-center"
+                toastr.warning('{{ message }}')
+            </script>
+        {% elif message.level_tag == 'error' %}
+            <script type=text/javascript>
+                toastr.options.positionClass = "toast-top-center"
+                toastr.error('{{ message }}')
+            </script>
+        {% endif %}
+    {% endfor %}
+{% endif %}
