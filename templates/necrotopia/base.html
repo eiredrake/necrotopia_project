@@ -58,7 +58,7 @@
                         {% if rediect_field_value %}
                             <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
                         {% endif %}
-                        <button class="nav-link navbar-text logout_button necrotopia-navbar-dark necrotopia-navbar-text-dark" type="submit"><i class="fa-solid fa-user right_padding"></i>Log Out [{{ user.username }}]</button>
+                        <button class="nav-link navbar-text logout_button necrotopia-navbar-dark necrotopia-navbar-text-dark" type="submit"><i class="fa-solid fa-user right_padding"></i>Log Out [{{ user.email }}]</button>
                     </form>
                 </li>
                 <li class="nav-item">

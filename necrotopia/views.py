@@ -69,7 +69,7 @@ def login(request, template_name='registration/login.html', redirect_field_name=
             user = form.get_user()
             auth_login(request, user)
 
-            messages.success(request, message="You have been logged in as {user}".format(user=user.username))
+            messages.success(request, message="You have been logged in as {user}".format(user=user.email))
 
             if request.session.test_cookie_worked():
                 request.session.delete_test_cookie()

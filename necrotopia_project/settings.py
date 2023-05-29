@@ -42,7 +42,7 @@ SECRET_KEY = Config.SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = Config.DEBUG
 
-# AUTH_USER_MODEL = 'necrotopia.SystemUser'
+AUTH_USER_MODEL = 'necrotopia.UserProfile'
 
 ALLOWED_HOSTS = Config.ALLOWED_HOSTS.split(',')
 
