@@ -10,11 +10,12 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
-from necrotopia.forms import LoginForm
+from necrotopia.forms import LoginForm, CustomUserCreationForm
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIR
 from django.contrib.auth import logout
 from django.contrib import messages
+from django.contrib.auth import login, authenticate
 
 
 @require_GET
@@ -37,10 +38,33 @@ def home(request):
     return render(request, template, context=context)
 
 
-def register(request):
-    template = 'registration/signup.html'
+def register(request, redirect_to=settings.LOGIN_REDIRECT_URL, template_name='registration/signup.html', creation_form=CustomUserCreationForm):
+    if request.method == "POST":
+        form = creation_form(data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            user.refresh_from_db()
 
-    return render(request, template)
+            username = form.cleaned_data.get('email')
+            raw_password = form.cleaned_data.get('password1')
+
+            user = authenticate(username=user.email, password=raw_password)
+            login(request, user)
+
+            messages.success(request, message="Your account has been created")
+
+            return HttpResponseRedirect(redirect_to)
+        else:
+            print(form.errors)
+    else:
+        form = creation_form(request)
+
+    new_context = {
+        'title': GLOBAL_SITE_NAME,
+        'form': form,
+    }
+
+    return render(request=request, template_name=template_name, context=new_context)
 
 
 def log_me_out(request):
@@ -52,7 +76,7 @@ def log_me_out(request):
     return HttpResponseRedirect(redirect_to)
 
 
-def login(request, template_name='registration/login.html', redirect_field_name=REDIRECT_FIELD_NAME, authentication_form=LoginForm):
+def authenticate_user(request, template_name='registration/login.html', redirect_field_name=REDIRECT_FIELD_NAME, authentication_form=LoginForm):
     redirect_to = settings.LOGIN_REDIRECT_URL
 
     if request.method == "POST":
