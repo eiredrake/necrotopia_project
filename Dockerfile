@@ -22,6 +22,6 @@ COPY media/static_images/ ./media/static_images/
 
 EXPOSE 8000
 
-CMD [ "gunicorn", "necrotopia_project.wsgi:application", "--bind", "0.0.0.0:8000" ]
+CMD [ "gunicorn", "necrotopia_project.wsgi", "--bind", "0.0.0.0:8000" ]
 
 RUN echo '===============WEBSITE END==============='
