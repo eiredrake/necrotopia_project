@@ -7,20 +7,22 @@
 {% crispy form %}
 
 
-{% block title %}Login to {{ title }}{% endblock %}
+{% block title %}Register with {{ title }}{% endblock %}
 
 {% block content %}
 
     <div id="id_dialog_container" class="container-sm justify-content-center w-25">
         <div id="id_dialog_body" class="row bg-success border border-dark rounded b-5 shadow">
             <div id="id_dialog_title_strip" class="row">
-                <div class="pl-2">Login to {{ title }}</div>
+                <div class="pl-2 pb-1">Register with {{ title }}</div>
             </div>
-            <div id="id_dialog_message_body" class="bg-light rounded-bottom">
+            <div id="id_dialog_message_body" class="bg-light rounded-bottom pb-2">
                 {% crispy form %}
-                <div id='form-errors'>{{ form_errors }}</div>
-            </div>
 
+                <div class="pb-2">
+                    Already have an account? <a href="login.html">Login</a> instead.
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

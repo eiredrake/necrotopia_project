@@ -21,9 +21,9 @@ from necrotopia import views
 
 urlpatterns = [
     # path('accounts/', include('django.contrib.auth.urls')),
+    path('register_user', views.register_user, name='register_user'),
     path('accounts/login', views.authenticate_user, name='authenticate_user'),
     path('accounts/logout', views.log_me_out, name='logout'),
-    path('accounts/signup/', views.register, name='register'),
     path('admin/', admin.site.urls),
     path('', include("necrotopia.urls")),
 ]

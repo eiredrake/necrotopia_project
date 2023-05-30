@@ -10,12 +10,14 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
-from necrotopia.forms import CustomUserCreationForm, AuthenticateUserForm
+from necrotopia.forms import AuthenticateUserForm, RegisterUserForm
+from necrotopia.models import UserProfile
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIR
 from django.contrib.auth import logout
 from django.contrib import messages
 from django.contrib.auth import login, authenticate
+from django.utils.translation import gettext_lazy as _translate
 
 
 @require_GET
@@ -38,44 +40,11 @@ def home(request):
     return render(request, template, context=context)
 
 
-def register(request, redirect_to=settings.LOGIN_REDIRECT_URL, template_name='registration/signup.html', creation_form=CustomUserCreationForm):
-
-    new_context = {
-        'title': GLOBAL_SITE_NAME,
-    }
-
-    if request.method == "POST":
-        form = creation_form(data=request.POST)
-        if form.is_valid():
-            user = form.save()
-            user.refresh_from_db()
-
-            username = form.cleaned_data.get('email')
-            raw_password = form.cleaned_data.get('password1')
-
-            user = authenticate(username=user.email, password=raw_password)
-            login(request, user)
-
-            messages.success(request, message="Your account has been created")
-
-            return HttpResponseRedirect(redirect_to)
-        else:
-            new_context['form'] = form
-
-            return render(request, template_name, new_context)
-    else:
-        form = creation_form(request)
-
-    new_context['form'] = form
-
-    return render(request=request, template_name=template_name, context=new_context)
-
-
 def log_me_out(request):
     logout(request)
     redirect_to = settings.LOGIN_REDIRECT_URL
 
-    messages.success(request, message="You have been logged out")
+    messages.success(request, message=_translate("You have been logged out"))
 
     return HttpResponseRedirect(redirect_to)
 
@@ -97,7 +66,7 @@ def authenticate_user(request, template_name='registration/login.html', redirect
             user = form.get_user()
             auth_login(request, user)
 
-            messages.success(request, message="You have been logged in as {user}".format(user=user.email))
+            messages.success(request, message=_translate("You have been logged in as {user}").format(user=user.email))
 
             if request.session.test_cookie_worked():
                 request.session.delete_test_cookie()
@@ -125,3 +94,26 @@ def authenticate_user(request, template_name='registration/login.html', redirect
     context.update(new_context)
 
     return render(request=request, template_name=template_name, context=new_context)
+
+
+def register_user(request):
+    redirect_to = settings.LOGIN_REDIRECT_URL
+
+    context = {}
+    if request.method == 'POST':
+        form = RegisterUserForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+
+            messages.success(request, message=_translate("Your user has been created!"))
+
+            return HttpResponseRedirect(redirect_to)
+        else:
+            messages.error(request, message=_translate("User account not created"))
+    else:
+        form = RegisterUserForm
+
+    context['form'] = form
+
+    return render(request, 'registration/user_registration.html', context=context)
