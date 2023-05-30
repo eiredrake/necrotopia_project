@@ -136,8 +136,8 @@ EMAIL_HOST_USER = Config.EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = Config.EMAIL_HOST_PASSWORD
 EMAIL_PORT = Config.EMAIL_PORT
 
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = '/tmp/messages'  # change this to a proper location
+EMAIL_BACKEND = Config.EMAIL_BACKEND
+# EMAIL_FILE_PATH = '/tmp/messages'  # change this to a proper location
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

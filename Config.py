@@ -26,6 +26,7 @@ class AppConfig:
     GLOBAL_SITE_NAME: str = ''
     SERVER_TIMEZONE: str = ''
     LIVE_SITE_OPEN: bool = False
+    EMAIL_BACKEND: str = ''
     EMAIL_USE_TLS: bool = False
     EMAIL_HOST: str = ''
     EMAIL_HOST_USER: str = ''
