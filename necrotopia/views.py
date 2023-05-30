@@ -1,24 +1,30 @@
 import re
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import EmailMessage
 from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template import RequestContext
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
 from necrotopia.forms import AuthenticateUserForm, RegisterUserForm
 from necrotopia.models import UserProfile
+from necrotopia.token import account_activation_token
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIR
 from django.contrib.auth import logout
 from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.utils.translation import gettext_lazy as _translate
-
+from django.utils.encoding import force_str
 
 @require_GET
 @cache_control(max_age=60 * 60 * 24, immutable=True, public=True)  # one day
@@ -49,7 +55,8 @@ def log_me_out(request):
     return HttpResponseRedirect(redirect_to)
 
 
-def authenticate_user(request, template_name='registration/login.html', redirect_field_name=REDIRECT_FIELD_NAME, authentication_form=AuthenticateUserForm):
+def authenticate_user(request, template_name='registration/login.html', redirect_field_name=REDIRECT_FIELD_NAME,
+                      authentication_form=AuthenticateUserForm):
     redirect_to = settings.LOGIN_REDIRECT_URL
 
     if request.method == "POST":
@@ -104,7 +111,23 @@ def register_user(request):
         form = RegisterUserForm(request.POST)
         if form.is_valid():
             user = form.save()
-            auth_login(request, user)
+            user.is_active = False  # deactivate until account is confirmed
+            user.save()
+            # auth_login(request, user)
+
+            current_site = get_current_site(request)
+            mail_subject = 'Activation link has been sent to your specified email'
+            message = render_to_string('registration/activation_email.html',
+                                       {
+                                           'user': user,
+                                           'domain': current_site.domain,
+                                           'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                                           'token': account_activation_token.make_token(user),
+                                       })
+
+            to_email = user.email
+            email = EmailMessage(mail_subject, message, to=[to_email])
+            email.send()
 
             messages.success(request, message=_translate("Your user has been created!"))
 
@@ -117,3 +140,23 @@ def register_user(request):
     context['form'] = form
 
     return render(request, 'registration/user_registration.html', context=context)
+
+
+class ActivateAccount(View):
+    def get(self, request, uidb64, token, *args, **kwargs):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = UserProfile.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, UserProfile.DoesNotExist):
+            user = None
+
+        if user is not None and account_activation_token.check_token(user, token):
+            user.is_active = True
+            user.email_confirmed = True
+            user.save()
+            login(request, user)
+            messages.success(request, _translate('Your account has been confirmed.'))
+            return redirect('home')
+        else:
+            messages.warning(request, _translate('The confirmation link was invalid, possibly because it has already been used.'))
+            return redirect('home')

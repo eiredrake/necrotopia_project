@@ -26,7 +26,11 @@ class AppConfig:
     GLOBAL_SITE_NAME: str = ''
     SERVER_TIMEZONE: str = ''
     LIVE_SITE_OPEN: bool = False
-
+    EMAIL_USE_TLS: bool = False
+    EMAIL_HOST: str = ''
+    EMAIL_HOST_USER: str = ''
+    EMAIL_HOST_PASSWORD: str = ''
+    EMAIL_PORT = 587
     """
     Map environment variables to class fields according to these rules:
       - Field won't be parsed unless it has a type annotation

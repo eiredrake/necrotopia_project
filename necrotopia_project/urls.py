@@ -18,11 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 
 from necrotopia import views
+from necrotopia.views import ActivateAccount
 
 urlpatterns = [
     # path('accounts/', include('django.contrib.auth.urls')),
     path('register_user', views.register_user, name='register_user'),
-    path('accounts/login', views.authenticate_user, name='authenticate_user'),
+    path('authenticate_user', views.authenticate_user, name='authenticate_user'),
+    path('activate/<uidb64>/<token>/', ActivateAccount.as_view(), name='activate'),
     path('accounts/logout', views.log_me_out, name='logout'),
     path('admin/', admin.site.urls),
     path('', include("necrotopia.urls")),
