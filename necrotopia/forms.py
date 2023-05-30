@@ -1,16 +1,33 @@
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Submit
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm
+from django.core import serializers
+from django.core.validators import EmailValidator
 from django.utils.translation import gettext_lazy as _translate
+from django_password_validators.password_character_requirements.password_validation import PasswordCharacterValidator
+from django_password_validators.password_history.models import PasswordHistory
+from django_password_validators.password_history.password_validation import UniquePasswordsValidator
 
 from necrotopia.models import UserProfile
 
 
-class LoginForm(AuthenticationForm):
+class AuthenticateUserForm(AuthenticationForm):
     remember_me = forms.BooleanField(label=_translate('Remember Me'), initial=False, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_id = 'id-loginForm'
+        self.helper.form_method = 'post'
+        self.helper.form_action = 'authenticate_user'
+        self.helper.error_text_inline = True
+
+        self.helper.add_input(Submit('submit', 'Login'))
 
 
 class CustomUserCreationForm(UserCreationForm):
-    password1 = forms.CharField(widget=forms.PasswordInput)
+    password1 = forms.CharField(label=_translate('Password'), widget=forms.PasswordInput)
     password2 = forms.CharField(label=_translate('Confirm Password'), widget=forms.PasswordInput)
 
     class Meta:
@@ -37,8 +54,6 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomUserChangeForm(UserChangeForm):
-
     class Meta:
         model = UserProfile
         fields = ('email',)
-

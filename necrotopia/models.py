@@ -13,8 +13,7 @@ from django.core.mail import send_mail
 class UserProfile(AbstractBaseUser, PermissionsMixin):
     email_validator = EmailValidator()
     email = models.EmailField(_translate('email address'), max_length=254, unique=True, blank=False,
-                              help_text=_translate('Required. 254 characters or fewer. Letters, digits and @/./+/-/_ '
-                                                   'only.'), validators=[email_validator],
+                              validators=[email_validator],
                               error_messages={"unique": _translate('A user with that username already exists')})
 
     is_staff = models.BooleanField(

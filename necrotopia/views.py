@@ -10,7 +10,7 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
-from necrotopia.forms import LoginForm, CustomUserCreationForm
+from necrotopia.forms import CustomUserCreationForm, AuthenticateUserForm
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIR
 from django.contrib.auth import logout
@@ -20,7 +20,7 @@ from django.contrib.auth import login, authenticate
 
 @require_GET
 @cache_control(max_age=60 * 60 * 24, immutable=True, public=True)  # one day
-def favicon(request: HttpRequest) -> HttpResponse:
+def favicon(request: HttpRequest) -> FileResponse:
     file = (STATICFILES_DIR / "images" / "project_icon.png").open("rb")
     return FileResponse(file)
 
@@ -39,6 +39,11 @@ def home(request):
 
 
 def register(request, redirect_to=settings.LOGIN_REDIRECT_URL, template_name='registration/signup.html', creation_form=CustomUserCreationForm):
+
+    new_context = {
+        'title': GLOBAL_SITE_NAME,
+    }
+
     if request.method == "POST":
         form = creation_form(data=request.POST)
         if form.is_valid():
@@ -55,14 +60,13 @@ def register(request, redirect_to=settings.LOGIN_REDIRECT_URL, template_name='re
 
             return HttpResponseRedirect(redirect_to)
         else:
-            print(form.errors)
+            new_context['form'] = form
+
+            return render(request, template_name, new_context)
     else:
         form = creation_form(request)
 
-    new_context = {
-        'title': GLOBAL_SITE_NAME,
-        'form': form,
-    }
+    new_context['form'] = form
 
     return render(request=request, template_name=template_name, context=new_context)
 
@@ -76,7 +80,7 @@ def log_me_out(request):
     return HttpResponseRedirect(redirect_to)
 
 
-def authenticate_user(request, template_name='registration/login.html', redirect_field_name=REDIRECT_FIELD_NAME, authentication_form=LoginForm):
+def authenticate_user(request, template_name='registration/login.html', redirect_field_name=REDIRECT_FIELD_NAME, authentication_form=AuthenticateUserForm):
     redirect_to = settings.LOGIN_REDIRECT_URL
 
     if request.method == "POST":
@@ -99,6 +103,10 @@ def authenticate_user(request, template_name='registration/login.html', redirect
                 request.session.delete_test_cookie()
 
             return HttpResponseRedirect(redirect_to)
+        else:
+            new_context = {'form': form, 'title': GLOBAL_SITE_NAME}
+
+            return render(request, template_name, new_context)
     else:
         form = authentication_form(request)
 

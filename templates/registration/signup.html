@@ -11,6 +11,9 @@
             <div id="id_dialog_message_body" class="bg-light rounded-bottom">
                 <form action="{% url 'register' %}" method="post">
                     {% csrf_token %}
+
+                    <div id='form-errors'>{{ form_errors }}</div>
+
                     <div id="id_username_row" class="row">
                         <div class="row">
                             <label for="username" class="col control-label text-left">Email Address:</label>
@@ -57,11 +60,6 @@
                         </div>
                     </div>
                 </form>
-            </div>
-            <div>
-                {% for error in field.errors %}
-                      <p style="color: red">{{ error }}</p>
-                {% endfor %}
             </div>
         </div>
     </div>

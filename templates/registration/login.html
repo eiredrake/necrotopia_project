@@ -1,52 +1,26 @@
 {% extends "necrotopia/base.html" %}
+{% load crispy_forms_filters %}
+
 {% load static %}
 {% load bootstrap5 %}
+{% load crispy_forms_tags %}
+{% crispy form %}
+
+
+{% block title %}Create an Account{% endblock %}
 
 {% block content %}
+
     <div id="id_dialog_container" class="container-sm justify-content-center w-25">
         <div id="id_dialog_body" class="row bg-success border border-dark rounded b-5 shadow">
             <div id="id_dialog_title_strip" class="row">
-                <div class="pl-2">Login to {{ title }}</div>
+                <div class="pl-2">Login to {{ title }} CRISPY</div>
             </div>
             <div id="id_dialog_message_body" class="bg-light rounded-bottom">
-                <form action="{% url 'authenticate_user' %}" method="post">
-                    {% csrf_token %}
-                    <div id="id_username_row" class="row">
-                        <div class="row">
-                            <label for="username" class="col control-label text-left">Email Address:</label>
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <input name="username" value="" type="text" class="form-control"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="id_password_row" class="row">
-                        <div class="row">
-                            <label for="password" class="col control-label text-left">Password:</label>
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <input name="password" type="password" class="form-control"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="id_remember_me_row" class="row">
-                        <div class="col">
-                            <input name="remember_me" class="form-check_input" type="checkbox" value=""
-                                   id="flexCheckDefault">
-                            <label class="form-check-label" for="flexCheckDefault">Remember Me</label>
-                        </div>
-                    </div>
-                    <div id="id_button_row" class="row pb-2 float-right">
-                        <div class="col pull-right">
-                            <input name="login" type="submit" value="Login" class="btn btn-success"/>
-                        </div>
-                    </div>
-                </form>
+                {% crispy form %}
+                <div id='form-errors'>{{ form_errors }}</div>
             </div>
 
         </div>
     </div>
-
 {% endblock %}
