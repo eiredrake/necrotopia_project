@@ -9,6 +9,8 @@ from django.utils.translation import gettext as _translate
 from necrotopia.managers import CustomUserManager
 from django.core.mail import send_mail
 
+USERNAME_FIELD = 'email'
+
 
 class UserProfile(AbstractBaseUser, PermissionsMixin):
     email_validator = EmailValidator()

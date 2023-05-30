@@ -6,18 +6,36 @@ from necrotopia.models import UserProfile
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.utils.translation import gettext_lazy as _translate
+from django.contrib import messages
+from necrotopia.views import send_registration_email
 from necrotopia_project.settings import GLOBAL_SITE_NAME
+
+
+def deactivate_user(modeladmin, request, queryset):
+    deactivate_user.short_description = 'Deactivate user'
+
+    queryset.update(is_active=False)
+
+
+def resend_registration_email(modeladmin, request, queryset):
+    resend_registration_email.short_description = 'Resend Activation Email'
+
+    queryset.update(is_active=False)
+    for user in queryset:
+        send_registration_email(request, user)
+
+    messages.success(request, _translate('Registration email resent'))
 
 
 class CustomUserAdmin(UserAdmin):
     add_form = RegisterUserForm
-    form = RegisterUserForm
+    change_form = RegisterUserForm
 
     model = UserProfile
 
-    list_display = ('email', 'is_active',
-                    'is_staff', 'is_superuser', 'last_login',)
+    list_display = ('email', 'is_active', 'is_staff', 'is_superuser', 'last_login',)
     list_filter = ('is_active', 'is_staff', 'is_superuser')
+    filter_horizontal = ()
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Permissions', {'fields': ('is_staff', 'is_active',
@@ -32,6 +50,7 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ('email',)
     ordering = ('email',)
+    actions = [deactivate_user, resend_registration_email]
 
 
 admin.site.register(UserProfile, CustomUserAdmin)

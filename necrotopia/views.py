@@ -103,6 +103,23 @@ def authenticate_user(request, template_name='registration/login.html', redirect
     return render(request=request, template_name=template_name, context=new_context)
 
 
+def send_registration_email(request, user):
+    current_site = get_current_site(request)
+    mail_subject = 'Activation link has been sent to your specified email'
+    message = render_to_string('registration/activation_email.html',
+                               {
+                                   'user': user,
+                                   'domain': current_site.domain,
+                                   'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                                   'token': account_activation_token.make_token(user),
+                               })
+
+    to_email = user.email
+    email = EmailMessage(mail_subject, message, to=[to_email])
+    email.content_subtype = 'html'
+    email.send()
+
+
 def register_user(request):
     redirect_to = settings.LOGIN_REDIRECT_URL
 
@@ -113,21 +130,8 @@ def register_user(request):
             user = form.save()
             user.is_active = False  # deactivate until account is confirmed
             user.save()
-            # auth_login(request, user)
 
-            current_site = get_current_site(request)
-            mail_subject = 'Activation link has been sent to your specified email'
-            message = render_to_string('registration/activation_email.html',
-                                       {
-                                           'user': user,
-                                           'domain': current_site.domain,
-                                           'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                                           'token': account_activation_token.make_token(user),
-                                       })
-
-            to_email = user.email
-            email = EmailMessage(mail_subject, message, to=[to_email])
-            email.send()
+            send_registration_email(request, user)
 
             messages.success(request, message=_translate("Your user has been created!"))
 
