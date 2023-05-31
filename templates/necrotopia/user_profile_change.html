@@ -1,0 +1,20 @@
+{% extends "necrotopia/base.html" %}
+{% load crispy_forms_filters %}
+
+{% load static %}
+{% load bootstrap5 %}
+{% load crispy_forms_tags %}
+{% crispy form %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+
+    <div id="id_dialog_container" class="container-sm justify-content-center w-25">
+        <div id="id_dialog_body" class="row bg-success border border-dark rounded b-5 shadow">
+            <div id="id_dialog_message_body" class="bg-light rounded-bottom pb-2">
+                {% crispy form %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

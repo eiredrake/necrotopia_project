@@ -164,3 +164,7 @@ class ActivateAccount(View):
         else:
             messages.warning(request, _translate('The confirmation link was invalid, possibly because it has already been used.'))
             return redirect('home')
+
+
+def user_profile_change(request):
+    return None
