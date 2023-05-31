@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from nested_admin.nested import NestedModelAdmin
 
 from necrotopia.forms import RegisterUserForm
-from necrotopia.models import UserProfile
+from necrotopia.models import UserProfile, Pronoun, Title
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.utils.translation import gettext_lazy as _translate
@@ -33,14 +34,20 @@ class CustomUserAdmin(UserAdmin):
 
     model = UserProfile
 
-    list_display = ('email', 'is_active', 'is_staff', 'is_superuser', 'last_login',)
+    list_display = ('email', 'display_name', 'full_name', 'is_active', 'is_staff', 'is_superuser', 'last_login', 'get_user_pronouns')
     list_filter = ('is_active', 'is_staff', 'is_superuser')
     filter_horizontal = ()
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active',
-                                    'is_superuser', 'groups', 'user_permissions')}),
-        ('Dates', {'fields': ('last_login', 'date_joined')})
+        ('Personal Details', {
+            'classes': ['collapse in'],
+            'fields': ('title', 'full_name', 'display_name', 'pronouns', )}),
+        ('Dates', {
+            'classes': ['collapse in'],
+            'fields': ('last_login', 'date_joined', 'birth_date', )}),
+        ('Permissions', {
+            'classes': ['collapse in'],
+            'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (
         (None, {
@@ -51,6 +58,14 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ('email',)
     ordering = ('email',)
     actions = [deactivate_user, resend_registration_email]
+
+    def get_user_pronouns(self, obj: UserProfile):
+        if obj.pronouns is None:
+            return "Not Set"
+        else:
+            return obj.pronouns.object
+
+    get_user_pronouns.short_description = _translate('Pronouns')
 
 
 admin.site.register(UserProfile, CustomUserAdmin)
@@ -74,3 +89,7 @@ admin.site.unregister(DjangoGroup)
 @admin.register(Group)
 class GroupAdmin(BaseGroupAdmin):
     pass
+
+
+admin.site.register(Pronoun)
+admin.site.register(Title)

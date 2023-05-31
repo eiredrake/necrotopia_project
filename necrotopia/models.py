@@ -1,22 +1,71 @@
-from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Permission, _user_get_permissions, User, \
+from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Permission, User, \
     PermissionsMixin
+from django.core.mail import send_mail
 from django.core.validators import EmailValidator
 from django.db import models
-from django.db.models.manager import EmptyManager
 from django.utils import timezone
 from django.utils.translation import gettext as _translate
-
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
 from necrotopia.managers import CustomUserManager
-from django.core.mail import send_mail
 
 USERNAME_FIELD = 'email'
 
 
+class Title(models.Model):
+    descriptor = models.CharField(max_length=30, blank=False, null=False)
+
+    def __str__(self):
+        return self.descriptor
+
+
+class Pronoun(models.Model):
+    name = models.CharField(max_length=30)
+    description = models.CharField(max_length=256)
+
+    subject = models.CharField(max_length=10, help_text="He, she, it")
+    object = models.CharField(max_length=10, help_text="Her, him, it")
+    reflexive = models.CharField(max_length=10, help_text="Itself, himself, herself")
+    possessive_pronoun = models.CharField(max_length=10, help_text="Hers, his, its")
+    possessive_determiner = models.CharField(max_length=10, help_text="His, her, its")
+
+    def she_he(self): return self.subject
+    def he_she(self): return self.subject
+    def em(self): return self.subject
+
+    def him_her(self): return self.object
+    def her_him(self): return self.object
+    def ey(self): return self.object
+
+    def himself_herself(self): return self.reflexive
+    def herself_himself(self): return self.reflexive
+    def emself(self): return self.reflexive
+
+    def his_hers(self): return self.possessive_pronoun
+    def hers_his(self): return self.possessive_pronoun
+    def eir(self): return self.possessive_pronoun
+
+    def his_her(self): return self.possessive_determiner
+    def her_his(self): return self.possessive_determiner
+    def eirs(self): return self.possessive_determiner
+
+    def __unicode__(self):
+        return self.name
+
+    def __str__(self):
+        return "{name}: {subject}, {object}, {reflexive}, {possessive_pronoun}, {possessive_determiner}".format(name=self.name, subject=self.subject, object=self.object, reflexive=self.reflexive, possessive_pronoun=self.possessive_pronoun, possessive_determiner=self.possessive_determiner)
+
+
 class UserProfile(AbstractBaseUser, PermissionsMixin):
+    full_name = models.CharField(max_length=255, null=False, blank=False)
+    display_name = models.CharField(max_length=255, null=False, blank=False)
     email_validator = EmailValidator()
     email = models.EmailField(_translate('email address'), max_length=254, unique=True, blank=False,
                               validators=[email_validator],
                               error_messages={"unique": _translate('A user with that username already exists')})
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name='django_user_title', null=True, blank=True)
+    pronouns = models.ForeignKey(Pronoun, on_delete=models.CASCADE, related_name='django_user_pronouns', null=True, blank=True)
+
 
     is_staff = models.BooleanField(
         _translate("staff status"),
@@ -41,6 +90,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     )
 
     date_joined = models.DateTimeField(_translate("date joined"), default=timezone.now)
+    birth_date = models.DateTimeField(_translate("birth_date"), blank=True, null=True)
 
     objects = CustomUserManager()
 
@@ -74,28 +124,6 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
-
-# Create your models here.
-# class Pronoun(models.Model):
-#     text = models.CharField(max_length=50, unique=True, blank=False, null=False)
-#
-#     def __str__(self):
-#         return self.text
-#
-#     @classmethod
-#     def get_default_pk(cls):
-#         event_category, created = cls.objects.get_or_create(text='Not Set')
-#         return event_category.pk
-#
-#     class Meta:
-#         verbose_name = "Pronoun"
-#         verbose_name_plural = "Pronouns"
-#
-#
-# class SystemUser(AbstractUser):
-#     middle_name = models.CharField(max_length=150, blank=True, null=True)
-# preferred_pronouns = models.ForeignKey(to=Pronoun, on_delete=models.CASCADE, default=Pronoun.get_default_pk, blank=True, null=True)
-# home_branch = models.ForeignKey(to='Branch', on_delete=models.CASCADE, blank=True, null=True)
 
 
 # class BranchStaffType(models.Model):
