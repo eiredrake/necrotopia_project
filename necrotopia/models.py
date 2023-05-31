@@ -5,7 +5,8 @@ from django.core.validators import EmailValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext as _translate
-
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
 from necrotopia.managers import CustomUserManager
 
 USERNAME_FIELD = 'email'
@@ -64,6 +65,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
                               error_messages={"unique": _translate('A user with that username already exists')})
     title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name='django_user_title', null=True, blank=True)
     pronouns = models.ForeignKey(Pronoun, on_delete=models.CASCADE, related_name='django_user_pronouns', null=True, blank=True)
+
 
     is_staff = models.BooleanField(
         _translate("staff status"),

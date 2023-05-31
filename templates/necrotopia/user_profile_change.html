@@ -6,15 +6,38 @@
 {% load crispy_forms_tags %}
 {% crispy form %}
 
-{% block title %}User Profile{% endblock %}
+
+{% block title %}Login to {{ title }}{% endblock %}
 
 {% block content %}
 
-    <div id="id_dialog_container" class="container-sm justify-content-center w-25">
+    <div id="id_dialog_container" class="container-lg justify-content-center">
         <div id="id_dialog_body" class="row bg-success border border-dark rounded b-5 shadow">
-            <div id="id_dialog_message_body" class="bg-light rounded-bottom pb-2">
-                {% crispy form %}
+            <div id="id_dialog_title_strip" class="row">
+                <div class="pl-2">{{ title }} User Profile</div>
             </div>
+            <div id="id_dialog_message_body" class="bg-light rounded-bottom">
+                <div id="id_dialog_message_block_row" class="row">
+                    <div id="id_dialog_left_column" class="col-2 bg-success pb-2">
+                        <div id="id_avatar_window_row" class="row">
+                            <div id="id_avatar_window_col" class="text-center">
+
+                            </div>
+                        </div>
+                        <div id="id_edit_button_row" class="text-center">
+                            <button>Edit</button>
+                        </div>
+                        <row id="id_user_name_row" class="row">
+                            <div id="id_user_name" class="col-md-6, offset-md-3 text-center">
+
+                            </div>
+                        </row>
+                    </div>
+                </div>
+
+                <div id='form-errors'>{{ form_errors }}</div>
+            </div>
+
         </div>
     </div>
 {% endblock %}

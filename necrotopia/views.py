@@ -15,7 +15,7 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
-from necrotopia.forms import AuthenticateUserForm, RegisterUserForm
+from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfileForm
 from necrotopia.models import UserProfile
 from necrotopia.token import account_activation_token
 from necrotopia_project import settings
@@ -166,5 +166,17 @@ class ActivateAccount(View):
             return redirect('home')
 
 
-def user_profile_change(request):
-    return None
+def user_profile_change(request, template='necrotopia/user_profile_change.html'):
+
+    context = {'title': GLOBAL_SITE_NAME}
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+    else:
+        form = UserProfileForm
+
+    context['form'] = form
+
+    return render(request, template, context=context)

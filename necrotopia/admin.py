@@ -41,7 +41,7 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('email', 'password')}),
         ('Personal Details', {
             'classes': ['collapse in'],
-            'fields': ('title', 'full_name', 'display_name', 'pronouns',)}),
+            'fields': ('title', 'full_name', 'display_name', 'pronouns', )}),
         ('Dates', {
             'classes': ['collapse in'],
             'fields': ('last_login', 'date_joined', 'birth_date', )}),
@@ -60,7 +60,10 @@ class CustomUserAdmin(UserAdmin):
     actions = [deactivate_user, resend_registration_email]
 
     def get_user_pronouns(self, obj: UserProfile):
-        return obj.pronouns.object
+        if obj.pronouns is None:
+            return "Not Set"
+        else:
+            return obj.pronouns.object
 
     get_user_pronouns.short_description = _translate('Pronouns')
 

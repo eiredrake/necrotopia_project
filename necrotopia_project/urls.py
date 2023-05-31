@@ -21,7 +21,6 @@ from necrotopia import views
 from necrotopia.views import ActivateAccount
 
 urlpatterns = [
-    # path('accounts/', include('django.contrib.auth.urls')),
     path('register_user', views.register_user, name='register_user'),
     path('authenticate_user', views.authenticate_user, name='authenticate_user'),
     path('user_profile_change', views.user_profile_change, name='user_profile_change'),

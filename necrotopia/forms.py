@@ -46,3 +46,23 @@ class RegisterUserForm(BaseUserCreationForm):
 
         self.helper.add_input(Submit('submit', 'Register', css_class='bg-success float-right pb-2'))
 
+
+class UserProfileForm(forms.ModelForm):
+    display_name = forms.CharField(label=_translate('Display Name'), widget=forms.TextInput)
+    full_name = forms.CharField(label=_translate('Full Name'), widget=forms.TextInput, required=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ('display_name', 'title', 'full_name')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_id = 'id-userProfile'
+        self.helper.form_method = 'post'
+        self.helper.form_action = 'user_profile_change'
+        self.helper.error_text_inline = True
+
+        self.helper.add_input(Submit('cancel', 'Cancel', css_class='bg-danger float-right pb-2 m-2'))
+        self.helper.add_input(Submit('submit', 'Update', css_class='bg-success float-right pb-2 m-2'))
+

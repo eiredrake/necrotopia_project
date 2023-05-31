@@ -10,9 +10,9 @@
 
     <div class="container-fluid d-flex justify-content-center">
         {% if user.is_authenticated %}
-            <H1>USER IS AUTHENTICATED</H1>
+            <H1>Welcome back {{ user.display_name }}. Everything is just where you left it.</H1>
         {% else %}
-            <H1>USER IS NOT AUTHENTICATED</H1>
+            <H1>Welcome, friendo. Please register an account to get the most out of your {{ title }} experience.</H1>
         {% endif %}
     </div>
 
