@@ -1,5 +1,6 @@
+from crispy_forms.bootstrap import StrictButton, InlineField, FormActions
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
+from crispy_forms.layout import Submit, Layout, Field
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm, BaseUserCreationForm, \
     UsernameField
@@ -54,15 +55,3 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ('display_name', 'title', 'full_name')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_id = 'id-userProfile'
-        self.helper.form_method = 'post'
-        self.helper.form_action = 'user_profile_change'
-        self.helper.error_text_inline = True
-
-        self.helper.add_input(Submit('cancel', 'Cancel', css_class='bg-danger float-right pb-2 m-2'))
-        self.helper.add_input(Submit('submit', 'Update', css_class='bg-success float-right pb-2 m-2'))
-

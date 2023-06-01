@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'django_password_validators',
     'django_password_validators.password_history',
+    'django_bootstrap_icons',
     'necrotopia',
 ]
 

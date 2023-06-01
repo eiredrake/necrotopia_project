@@ -5,39 +5,48 @@
 {% load bootstrap5 %}
 {% load crispy_forms_tags %}
 {% crispy form %}
+{% load bootstrap_icons %}
 
-
-{% block title %}Login to {{ title }}{% endblock %}
+{% block title %}{{ user.username }}{% endblock %}
 
 {% block content %}
 
-    <div id="id_dialog_container" class="container-lg justify-content-center">
-        <div id="id_dialog_body" class="row bg-success border border-dark rounded b-5 shadow">
-            <div id="id_dialog_title_strip" class="row">
-                <div class="pl-2">{{ title }} User Profile</div>
+    <div id="id_user_profile_container" class="container container-lg">
+        <div id="id_main_internal_row" class="row">
+            <div id="id_main_left_col" class="col-3 bg-success text-center">
+                <h2>{{ user.display_name }}</h2>
+                <a href="">
+                    <img src="{% static 'images/default_user.png' %}" class="rounded-circle mb-2"/>
+                    {% bs_icon 'pencil' color='black' extra_classes='align-bottom mb-2' %}
+                </a>
             </div>
-            <div id="id_dialog_message_body" class="bg-light rounded-bottom">
-                <div id="id_dialog_message_block_row" class="row">
-                    <div id="id_dialog_left_column" class="col-2 bg-success pb-2">
-                        <div id="id_avatar_window_row" class="row">
-                            <div id="id_avatar_window_col" class="text-center">
+            <div id="id_main_right_col" class="col bg-warning">
 
-                            </div>
+                <div class="container">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                            <a id="nav-personal-tab"  class="nav-link active" data-bs-toggle="tab" href="#nav-personal" role="tab" aria-controls="nav-personal" aria-selected="true">Personal Details</a>
+                            <a id="nav-bubkiss-tab" class="nav-link" data-bs-toggle="tab" href="#nav-bubkiss" role="tab" aria-controls="nav-bubkiss" aria-selected="false">Bubkiss</a>
+                            <a id="nav-nada-tab" class="nav-link" data-bs-toggle="tab" href="#nav-nada" role="tab" aria-controls="nav-nada" aria-selected="false">Nada</a>
                         </div>
-                        <div id="id_edit_button_row" class="text-center">
-                            <button>Edit</button>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div id="nav-personal" class="tab-pane fade show active" role="tabpanel" aria-labelledby="nav-personal-tab">
+{#                            {% include "necrotopia/user_displayname.html" %}#}
+                            first tab
                         </div>
-                        <row id="id_user_name_row" class="row">
-                            <div id="id_user_name" class="col-md-6, offset-md-3 text-center">
-
-                            </div>
-                        </row>
+                        <div id="nav-bubkiss" class="tab-pane fade"  role="tabpanel" aria-labelledby="nav-bubkiss-tab">
+                            second tab
+                        </div>
+                        <div id="nav-nada" class="tab-pane fade"  role="tabpanel" aria-labelledby="nav-nada-tab">
+                            second tab
+                        </div>
                     </div>
                 </div>
 
-                <div id='form-errors'>{{ form_errors }}</div>
-            </div>
 
+            </div>
         </div>
     </div>
+
 {% endblock %}

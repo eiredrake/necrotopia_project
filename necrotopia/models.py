@@ -57,8 +57,8 @@ class Pronoun(models.Model):
 
 
 class UserProfile(AbstractBaseUser, PermissionsMixin):
-    full_name = models.CharField(max_length=255, null=False, blank=False)
     display_name = models.CharField(max_length=255, null=False, blank=False)
+    full_name = models.CharField(max_length=255, null=False, blank=False)
     email_validator = EmailValidator()
     email = models.EmailField(_translate('email address'), max_length=254, unique=True, blank=False,
                               validators=[email_validator],
