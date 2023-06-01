@@ -167,17 +167,19 @@ class ActivateAccount(View):
 
 
 def user_profile_change(request, template='necrotopia/user_profile_change.html'):
-    context = {}
+    context = {'user': request.user, 'title': GLOBAL_SITE_NAME}
+    user = request.user
+
     if request.method == 'POST':
         form = UserProfileForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user.display_name = form.cleaned_data['display_name']
             user.save()
         else:
             pass
     else:
-        form = UserProfileForm(request.GET)
+        form = UserProfileForm(instance=user)
 
-    context['title'] = GLOBAL_SITE_NAME
+    context['form'] = form
 
     return render(request, template, context=context)
