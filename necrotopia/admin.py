@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from nested_admin.nested import NestedModelAdmin
+from nested_admin.nested import NestedModelAdmin, NestedTabularInline
 
 from necrotopia.forms import RegisterUserForm
-from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender
+from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.utils.translation import gettext_lazy as _translate
@@ -98,17 +98,51 @@ class GenderAdmin(NestedModelAdmin):
     ordering = ('descriptor', )
     search_fields = ('descriptor', )
 
-@admin.register(ChapterStaffType)
-class ChapterStaffTypeAdmin(NestedModelAdmin):
-    list_display = ('name', 'description', 'registry_date', 'registrar')
+
+class UsefulLinksInline(NestedTabularInline):
+    extra = 0
+    model = UsefulLinks
+    fields = ('name', 'published', 'url', 'registrar', 'registry_date')
+
+
+@admin.register(Chapter)
+class ChapterAdmin(NestedModelAdmin):
+    list_display = ('name', 'active', 'registry_date', 'registrar')
     list_display_links = list_display
     ordering = ('name', )
     search_fields = ('name', )
 
-@admin.register(Chapter)
-class ChapterAdmin(NestedModelAdmin):
-    list_display = ('name', 'registry_date', 'registrar')
+    fieldsets = (
+        (None,
+         {
+             'fields': ('name', 'active', )
+         }),
+        ('Registrar', {
+            'classes': ('collapse',),
+            'fields': ('registrar', 'registry_date'),
+        }),
+    )
+
+    inlines = [
+        UsefulLinksInline,
+    ]
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(ChapterAdmin, self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        return get_data
+
+
+@admin.register(UsefulLinks)
+class UsefulLinksAdmin(NestedModelAdmin):
+    list_display = ('name', 'chapter_link', 'url', 'published', 'registry_date', 'registrar')
     list_display_links = list_display
     ordering = ('name', )
     search_fields = ('name', )
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(UsefulLinksAdmin, self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        return get_data
+
 

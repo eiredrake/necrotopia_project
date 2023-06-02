@@ -42,7 +42,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
                               validators=[email_validator],
                               error_messages={"unique": _translate('A user with that username already exists')})
     title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name='django_user_title', null=True, blank=True)
-    pronouns = models.CharField(max_length=255, null=False, blank=True)
+    pronouns = models.CharField(max_length=255, null=True, blank=True)
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=True)
 
     is_staff = models.BooleanField(
@@ -74,15 +74,26 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
 
     EMAIL_FIELD = "email"
     USERNAME_FIELD = "email"
+
     # REQUIRED_FIELDS = ["email"]
 
     def __str__(self):
+        output_string = self.email
+        if len(self.display_name) > 0:
+            output_string = "{name} {display_name}".format(name=self.email, display_name=self.display_name)
+
         return self.email
 
     class Meta:
         verbose_name = _translate('user')
         verbose_name_plural = _translate('users')
         abstract = False
+
+    def save(self, *args, **kwargs):
+        if self.email is not None:
+            super(UserProfile, self).save(*args, **kwargs)
+        else:
+            pass
 
     def clean(self):
         super().clean()
@@ -104,26 +115,50 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
+class UsefulLinks(models.Model):
+    name = models.CharField(max_length=255, unique=False, blank=False, null=False)
+    description = models.CharField(max_length=500, unique=False, blank=True, null=True)
+    url = models.URLField(blank=False, null=False)
+    published = models.BooleanField(blank=False, null=False, default=True)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, )
+    chapter_link = models.ForeignKey('Chapter', on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+        return "{name} {url}".format(name=self.name, url=self.url)
+
+    class Meta:
+        verbose_name_plural = "Chapter Useful Links"
+        verbose_name = "Chapter Useful Link"
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        return get_data
+
+
 class ChapterStaffType(models.Model):
     name = models.CharField(max_length=255, unique=True, blank=False, null=False)
     description = models.CharField(max_length=255, blank=True, null=True)
-    registry_date = models.DateTimeField('registry_date', default=timezone.now)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now, blank=False, null=False)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=False, null=False)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        verbose_name_plural = "branches staff type"
+        verbose_name_plural = "chapter staff type"
 
 
 class Chapter(models.Model):
     name = models.CharField(max_length=255, unique=True, blank=False, null=False)
+    active = models.BooleanField(blank=False, null=False, default=True)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='chapter_registrar')
+    useful_links = models.ForeignKey(UsefulLinks, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        verbose_name_plural = "branches"
+        verbose_name_plural = "chapters"
