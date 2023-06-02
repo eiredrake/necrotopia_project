@@ -36,9 +36,6 @@ def favicon(request: HttpRequest) -> FileResponse:
 # Create your views here.
 def home(request):
     template = 'necrotopia/home.html'
-    if not Config.LIVE_SITE_OPEN:
-        template = 'necrotopia/coming_soon.html'
-
     context = {
         "title": GLOBAL_SITE_NAME,
     }
