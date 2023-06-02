@@ -18,42 +18,20 @@ class Title(models.Model):
     def __str__(self):
         return self.descriptor
 
+    @classmethod
+    def choices(cls):
+        return [(item.id, item.descriptor) for item in Title.objects.all()]
 
-class Pronoun(models.Model):
-    name = models.CharField(max_length=30)
-    description = models.CharField(max_length=256)
 
-    subject = models.CharField(max_length=10, help_text="He, she, it")
-    object = models.CharField(max_length=10, help_text="Her, him, it")
-    reflexive = models.CharField(max_length=10, help_text="Itself, himself, herself")
-    possessive_pronoun = models.CharField(max_length=10, help_text="Hers, his, its")
-    possessive_determiner = models.CharField(max_length=10, help_text="His, her, its")
-
-    def she_he(self): return self.subject
-    def he_she(self): return self.subject
-    def em(self): return self.subject
-
-    def him_her(self): return self.object
-    def her_him(self): return self.object
-    def ey(self): return self.object
-
-    def himself_herself(self): return self.reflexive
-    def herself_himself(self): return self.reflexive
-    def emself(self): return self.reflexive
-
-    def his_hers(self): return self.possessive_pronoun
-    def hers_his(self): return self.possessive_pronoun
-    def eir(self): return self.possessive_pronoun
-
-    def his_her(self): return self.possessive_determiner
-    def her_his(self): return self.possessive_determiner
-    def eirs(self): return self.possessive_determiner
-
-    def __unicode__(self):
-        return self.name
+class Gender(models.Model):
+    descriptor = models.CharField(max_length=30, blank=False, null=False)
 
     def __str__(self):
-        return "{name}: {subject}, {object}, {reflexive}, {possessive_pronoun}, {possessive_determiner}".format(name=self.name, subject=self.subject, object=self.object, reflexive=self.reflexive, possessive_pronoun=self.possessive_pronoun, possessive_determiner=self.possessive_determiner)
+        return self.descriptor
+
+    @classmethod
+    def choices(cls):
+        return [(item.id, item.descriptor) for item in Gender.objects.all()]
 
 
 class UserProfile(AbstractBaseUser, PermissionsMixin):
@@ -64,8 +42,8 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
                               validators=[email_validator],
                               error_messages={"unique": _translate('A user with that username already exists')})
     title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name='django_user_title', null=True, blank=True)
-    pronouns = models.ForeignKey(Pronoun, on_delete=models.CASCADE, related_name='django_user_pronouns', null=True, blank=True)
-
+    pronouns = models.CharField(max_length=255, null=False, blank=True)
+    gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=True)
 
     is_staff = models.BooleanField(
         _translate("staff status"),
@@ -126,26 +104,26 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
-# class BranchStaffType(models.Model):
-#     name = models.CharField(max_length=255, unique=True, blank=False, null=False)
-#     description = models.CharField(max_length=255, blank=True, null=True)
-#     registry_date = models.DateTimeField('registry_date', default=timezone.now)
-#     registrar = models.ForeignKey(SystemUser, on_delete=models.CASCADE)
-#
-#     def __str__(self):
-#         return self.name
-#
-#     class Meta:
-#         verbose_name_plural = "branches staff type"
-#
-#
-# class Branch(models.Model):
-#     name = models.CharField(max_length=255, unique=True, blank=False, null=False)
-#     registry_date = models.DateTimeField('registry_date', default=timezone.now)
-#     registrar = models.ForeignKey(SystemUser, on_delete=models.CASCADE)
-#
-#     def __str__(self):
-#         return self.name
-#
-#     class Meta:
-#         verbose_name_plural = "branches"
+class ChapterStaffType(models.Model):
+    name = models.CharField(max_length=255, unique=True, blank=False, null=False)
+    description = models.CharField(max_length=255, blank=True, null=True)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "branches staff type"
+
+
+class Chapter(models.Model):
+    name = models.CharField(max_length=255, unique=True, blank=False, null=False)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "branches"

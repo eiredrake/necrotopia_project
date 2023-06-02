@@ -174,6 +174,10 @@ def user_profile_change(request, template='necrotopia/user_profile_change.html')
         form = UserProfileForm(request.POST)
         if form.is_valid():
             user.display_name = form.cleaned_data['display_name']
+            user.full_name = form.cleaned_data['full_name']
+            user.title = form.cleaned_data['title']
+            user.gender = form.cleaned_data['gender']
+
             user.save()
         else:
             pass

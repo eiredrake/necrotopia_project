@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from nested_admin.nested import NestedModelAdmin
 
 from necrotopia.forms import RegisterUserForm
-from necrotopia.models import UserProfile, Pronoun, Title
+from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.utils.translation import gettext_lazy as _translate
@@ -34,14 +34,14 @@ class CustomUserAdmin(UserAdmin):
 
     model = UserProfile
 
-    list_display = ('email', 'display_name', 'full_name', 'is_active', 'is_staff', 'is_superuser', 'last_login', 'get_user_pronouns')
+    list_display = ('email', 'display_name', 'full_name', 'is_active', 'is_staff', 'is_superuser', 'last_login', 'pronouns', 'gender')
     list_filter = ('is_active', 'is_staff', 'is_superuser')
     filter_horizontal = ()
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal Details', {
             'classes': ['collapse in'],
-            'fields': ('title', 'full_name', 'display_name', 'pronouns', )}),
+            'fields': ('title', 'full_name', 'display_name', 'pronouns', 'gender' )}),
         ('Dates', {
             'classes': ['collapse in'],
             'fields': ('last_login', 'date_joined', 'birth_date', )}),
@@ -58,14 +58,6 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ('email',)
     ordering = ('email',)
     actions = [deactivate_user, resend_registration_email]
-
-    def get_user_pronouns(self, obj: UserProfile):
-        if obj.pronouns is None:
-            return "Not Set"
-        else:
-            return obj.pronouns.object
-
-    get_user_pronouns.short_description = _translate('Pronouns')
 
 
 admin.site.register(UserProfile, CustomUserAdmin)
@@ -91,5 +83,32 @@ class GroupAdmin(BaseGroupAdmin):
     pass
 
 
-admin.site.register(Pronoun)
-admin.site.register(Title)
+@admin.register(Title)
+class TitleAdmin(NestedModelAdmin):
+    list_display = ('descriptor', )
+    list_display_links = list_display
+    ordering = ('descriptor', )
+    search_fields = ('descriptor', )
+
+
+@admin.register(Gender)
+class GenderAdmin(NestedModelAdmin):
+    list_display = ('descriptor', )
+    list_display_links = list_display
+    ordering = ('descriptor', )
+    search_fields = ('descriptor', )
+
+@admin.register(ChapterStaffType)
+class ChapterStaffTypeAdmin(NestedModelAdmin):
+    list_display = ('name', 'description', 'registry_date', 'registrar')
+    list_display_links = list_display
+    ordering = ('name', )
+    search_fields = ('name', )
+
+@admin.register(Chapter)
+class ChapterAdmin(NestedModelAdmin):
+    list_display = ('name', 'registry_date', 'registrar')
+    list_display_links = list_display
+    ordering = ('name', )
+    search_fields = ('name', )
+
