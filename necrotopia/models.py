@@ -255,18 +255,46 @@ class ChapterStaffType(models.Model):
         verbose_name_plural = "chapter staff type"
 
 
+class Department(models.Model):
+    name = models.CharField(max_length=255, unique=True, blank=False, null=False)
+    description = models.CharField(max_length=255, blank=True, null=True)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now, blank=False, null=False)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=False, null=False)
+
+    def __str__(self):
+        return self.name
+
+
+class ChapterStaff(models.Model):
+    user_profile = models.ForeignKey(UserProfile, blank=False, null=False, on_delete=models.CASCADE)
+    type = models.ForeignKey(ChapterStaffType, blank=False, null=False, on_delete=models.CASCADE)
+    chapter_link = models.ForeignKey('Chapter', blank=True, null=True, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
+
+    def email(self):
+        return self.user_profile.email
+
+    def display_name(self):
+        return self.user_profile.display_name
+
+    def __str__(self):
+        return self.user_profile.display_name
+
+
 class Chapter(models.Model):
     name = models.CharField(max_length=255, unique=True, blank=False, null=False)
     active = models.BooleanField(blank=False, null=False, default=True)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='chapter_registrar')
     useful_links = models.ForeignKey(UsefulLinks, on_delete=models.CASCADE, blank=True, null=True)
+    staff = models.ForeignKey(ChapterStaff, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
 
     class Meta:
         verbose_name_plural = "chapters"
+
     def get_changeform_initial_data(self, request):
         get_data = super(self).get_changeform_initial_data(request)
         get_data['registrar'] = request.user.pk

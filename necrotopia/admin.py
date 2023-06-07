@@ -9,7 +9,7 @@ from taggit.forms import TagField, TextareaTagWidget
 
 from necrotopia.forms import RegisterUserForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
-    ResourceItem, RatedSkillItem, SkillRatings, SkillItem
+    ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -125,6 +125,23 @@ class UsefulLinksInline(NestedTabularInline):
     fields = ('name', 'published', 'url')
 
 
+class ChapterStaffInline(NestedTabularInline):
+    extra = 0
+    model = ChapterStaff
+    fields = ('user_profile', 'department', 'type')
+
+    verbose_name = "Chapter Staff Member"
+    verbose_name_plural = "Chapter Staff"
+
+
+@admin.register(Department)
+class DepartmentAdmin(NestedModelAdmin):
+    list_display = ('name', 'description', 'registry_date', 'registrar')
+    list_display_links = list_display
+    ordering = ('name', )
+    search_fields = ('name', )
+
+
 @admin.register(Chapter)
 class ChapterAdmin(NestedModelAdmin):
     list_display = ('name', 'active', 'registry_date', 'registrar')
@@ -137,6 +154,10 @@ class ChapterAdmin(NestedModelAdmin):
          {
              'fields': ('name', 'active', )
          }),
+        ('Staff', {
+            'classes': ('collapse',),
+            'fields': ('staff',),
+        }),
         ('Registrar', {
             'classes': ('collapse',),
             'fields': ('registrar', 'registry_date'),
@@ -145,6 +166,7 @@ class ChapterAdmin(NestedModelAdmin):
 
     inlines = [
         UsefulLinksInline,
+        ChapterStaffInline,
     ]
 
     def get_changeform_initial_data(self, request):
