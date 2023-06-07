@@ -1,15 +1,26 @@
+import django.forms.models
 from django.contrib import admin
+from django.contrib.admin.checks import InlineModelAdminChecks
 from django.contrib.auth.admin import UserAdmin
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
+from taggit.forms import TagField, TextareaTagWidget
 
 from necrotopia.forms import RegisterUserForm
-from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks
+from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
+    ResourceItem, RatedSkillItem, SkillRatings, SkillItem
+from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.utils.translation import gettext_lazy as _translate
 from django.contrib import messages
 from necrotopia.views import send_registration_email
 from necrotopia_project.settings import GLOBAL_SITE_NAME
+from taggit.forms import TagField
+from taggit.managers import TaggableManager
+from taggit.models import Tag
+from functools import partial as curry
 
 
 def deactivate_user(modeladmin, request, queryset):
@@ -78,6 +89,15 @@ class Group(DjangoGroup):
 admin.site.unregister(DjangoGroup)
 
 
+@admin.register(ChapterStaffType)
+class ChapterStaffTypeAdmin(BaseGroupAdmin):
+    list_display = ('name', 'description', 'registry_date', 'registrar')
+    list_display_links = list_display
+    ordering = ('name', )
+    search_fields = ('name', )
+    filter_horizontal = ()
+
+
 @admin.register(Group)
 class GroupAdmin(BaseGroupAdmin):
     pass
@@ -102,7 +122,7 @@ class GenderAdmin(NestedModelAdmin):
 class UsefulLinksInline(NestedTabularInline):
     extra = 0
     model = UsefulLinks
-    fields = ('name', 'published', 'url', 'registrar', 'registry_date')
+    fields = ('name', 'published', 'url')
 
 
 @admin.register(Chapter)
@@ -135,14 +155,134 @@ class ChapterAdmin(NestedModelAdmin):
 
 @admin.register(UsefulLinks)
 class UsefulLinksAdmin(NestedModelAdmin):
-    list_display = ('name', 'chapter_link', 'url', 'published', 'registry_date', 'registrar')
+    list_display = ('name', 'chapter_link', 'url', 'published', 'registrar', 'registry_date')
     list_display_links = list_display
     ordering = ('name', )
     search_fields = ('name', )
 
+
+class ResourceItemAdminForm(forms.ModelForm):
+    name = forms.CharField(widget=forms.TextInput(attrs={'style': 'width: 50em;'}))
+    tags = TagField(widget=TextareaTagWidget(attrs={'style': 'width: 50em'}))
+
+
+class RatedSkillInline(NestedTabularInline):
+    extra = 0
+    model = RatedSkillItem
+    fields = ('mind', 'time', 'grade', 'skill', 'one_use_per_game')
+
+
+class SkillRatingInline(NestedTabularInline):
+    extra = 0
+    model = SkillRatings
+    fields = ('grade', 'description')
+
+
+@admin.register(ResourceItem)
+class ResourceItemAdmin(NestedModelAdmin):
+    form = ResourceItemAdminForm
+    tag_display = ['tag_list']
+    # fields = ('name', 'expiration_units', 'time_units', 'tags', 'registrar', 'registry_date')
+    list_display = ('name', 'expiration', 'related_skills', 'tag_list')
+    list_display_links = list_display
+    ordering = ('name',)
+    search_fields = ('name', 'tags__name', 'ratedskillitem__skill__name')
+    inlines = [
+        # RatedSkillInline,
+    ]
+    fieldsets = (
+        (None,
+         {
+             'fields': ('name', 'expiration_units', 'time_units', 'tags')
+         }),
+        ('Registration', {
+            'classes': ('collapse',),
+            'fields': ('registrar', 'registry_date'),
+        }),
+    )
+    actions = ['bulk_tagging']
+
+    @admin.action(description='Set the tags of all selected items.')
+    def bulk_tagging(self, request, queryset):
+        # print("post: %s" % request.POST)
+        replace = False
+
+        if 'replace' in request.POST:
+            replace = request.POST.get('replace')
+
+        # print('replace: %s' % str(replace))
+
+        if 'apply' in request.POST:
+            new_tags = request.POST.get('new_tags')
+            new_tags = new_tags.split(',')
+
+            for item in queryset:
+                old_tags = list(item.tags.all())
+                if not replace:
+                    new_tags = new_tags + old_tags
+
+                item.tags.set(tags=new_tags, through_defaults=None, clear=False)
+
+            self.message_user(request, level=messages.SUCCESS,
+                              message="Changed tags on {} items".format(queryset.count()))
+            return HttpResponseRedirect(request.get_full_path())
+        elif 'cancel' in request.POST:
+            self.message_user(request, level=messages.ERROR, message="Action cancelled")
+            return HttpResponseRedirect(request.get_full_path())
+        else:
+
+            return render(request, 'necrotopia/bulk_tagging.html', context={
+                "title": 'Confirm Action',
+                "items": queryset,
+            })
+
+    def related_skills(self, obj):
+        if obj.ratedskillitem_set is not None:
+            the_skills = obj.ratedskillitem_set.all().order_by('grade', 'skill__name', )
+            return u", ".join(str(o) for o in the_skills)
+        else:
+            return dir(obj)
+
+    def expiration(self, obj):
+        if obj.time_units != TimeUnits.No_Expiration:
+            x = TimeUnits(obj.time_units).name
+            return f'{obj.expiration_units} {x}'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('tags')
+
+    def tag_list(self, obj):
+        the_tags = obj.tags.all().order_by('name')
+        return u", ".join(o.name for o in the_tags)
+
     def get_changeform_initial_data(self, request):
-        get_data = super(UsefulLinksAdmin, self).get_changeform_initial_data(request)
-        get_data['registrar'] = request.user.pk
+        get_data = {'registrar': request.user.pk}
         return get_data
 
 
+@admin.register(SkillItem)
+class SkillItemAdmin(NestedModelAdmin):
+    tag_display = ['tag_list']
+    list_display = ('name', 'category', 'tag_list')
+    search_fields = ('name', 'category', 'tags__name')
+    fieldsets = (
+        (None,
+         {
+             'fields': ('name', 'category', 'tags')
+         }),
+        ('Creator', {
+            'classes': ('collapse',),
+            'fields': ('creator', 'creation_date'),
+        }),
+    )
+    inlines = [
+        SkillRatingInline,
+    ]
+
+    def tag_list(self, obj):
+        the_tags = obj.tags.all().order_by('name')
+        return u", ".join(o.name for o in the_tags)
+
+    def get_changeform_initial_data(self, request):
+        get_data = {'creator': request.user.pk}
+        return get_data

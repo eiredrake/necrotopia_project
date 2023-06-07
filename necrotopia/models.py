@@ -1,5 +1,8 @@
+from enum import IntEnum
+
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Permission, User, \
     PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import EmailValidator
 from django.db import models
@@ -7,9 +10,107 @@ from django.utils import timezone
 from django.utils.translation import gettext as _translate
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
+from taggit.forms import TagField
+from taggit.managers import TaggableManager
+from taggit.models import Tag
+
 from necrotopia.managers import CustomUserManager
 
 USERNAME_FIELD = 'email'
+
+
+class Months(IntEnum):
+    January = 1
+    February = 2
+    March = 3
+    April = 4
+    May = 5
+    June = 6
+    July = 7
+    August = 8
+    September = 9
+    October = 10
+    November = 11
+    December = 12
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
+
+
+class Grade(IntEnum):
+    Ungraded = 0
+    Basic = 1
+    Proficient = 2
+    Master = 3
+
+    def __str__(self):
+        return str(self.name)
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
+
+
+class TimeUnits(IntEnum):
+    No_Expiration = 0
+    end_of_event = 1
+    hours = 2
+    days = 3
+    months = 4
+    years = 5
+
+    def __str__(self):
+        return str(self.name)
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
+
+
+class ComponentType(IntEnum):
+    Scrap = 0
+    Herb = 1
+    Weapon = 2
+    Gizmo = 3
+    Produce = 4
+    Brew = 5
+    Meal = 6
+    Injectable = 7
+    Armor = 8
+    Vehicle = 9
+    Room_Augment = 10
+    Weapon_Augment = 11
+    Armor_Augment = 12
+    Vehicle_Augment = 13
+    Trap = 14
+    Shield_Augment = 15
+    Ranged_Exotic = 16
+    Melee_Exotic = 17
+
+    def __str__(self):
+        return str(self.name)
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
+
+
+class SkillCategory(IntEnum):
+    Combat = 1
+    Civilized = 2
+    Wasteland = 3
+    Anomaly = 4
+    Lore = 5
+
+    def __str__(self):
+        return str(self.name)
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
+
+
 
 
 class Title(models.Model):
@@ -121,20 +222,24 @@ class UsefulLinks(models.Model):
     url = models.URLField(blank=False, null=False)
     published = models.BooleanField(blank=False, null=False, default=True)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, )
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     chapter_link = models.ForeignKey('Chapter', on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return "{name} {url}".format(name=self.name, url=self.url)
 
+    def clean(self):
+        cleaned_data = super(UsefulLinks, self).clean()
+        if self.chapter_link.pk is None:
+            if self.chapter_link.registrar is not None:
+                self.registrar = self.chapter_link.registrar
+                self.registrar_id = self.chapter_link.registrar_id
+
+        return cleaned_data
+
     class Meta:
         verbose_name_plural = "Chapter Useful Links"
         verbose_name = "Chapter Useful Link"
-
-    def get_changeform_initial_data(self, request):
-        get_data = super(self).get_changeform_initial_data(request)
-        get_data['registrar'] = request.user.pk
-        return get_data
 
 
 class ChapterStaffType(models.Model):
@@ -162,3 +267,98 @@ class Chapter(models.Model):
 
     class Meta:
         verbose_name_plural = "chapters"
+    def get_changeform_initial_data(self, request):
+        get_data = super(self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        return get_data
+
+
+class ResourceItem(models.Model):
+    name = models.CharField(max_length=255, unique=False)
+    expiration_units = models.SmallIntegerField(default=6, blank=True, null=True)
+    time_units = models.IntegerField(choices=TimeUnits.choices(), default=TimeUnits.months)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
+    rated_skills = models.ForeignKey('RatedSkillItem', on_delete=models.CASCADE, null=True, blank=True,
+                                     related_name='related_skills')
+
+    def get_expiration(self):
+        if self.expiration_units == 0 or self.time_units == TimeUnits.No_Expiration:
+            return 'None'
+        else:
+            expiration_units_string = str(self.expiration_units)
+            time_string = TimeUnits(self.time_units).name
+
+            return f'{expiration_units_string} {time_string}'
+
+    def get_tags_string(self):
+        return ', '.join(t for t in self.tags.names())
+
+    def get_related_skills(self):
+        return ''
+        # filtered = RatedSkillItem.objects.filter(self.rated_skills)
+        # print(dir(filtered))
+        # if self > 0:
+        #     foo = self.rated_skills.objects
+        #     print(dir(foo))
+        #     return ", ".join(str(skill.name) for skill in foo)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Resource'
+        verbose_name_plural = 'Resources'
+
+
+class SkillItem(models.Model):
+    name = models.CharField(max_length=255, unique=False)
+    category = models.IntegerField(choices=SkillCategory.choices(), default=SkillCategory.Combat)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
+    skill_ratings = models.ForeignKey('SkillRatings', on_delete=models.CASCADE, null=True, blank=True,
+                                      related_name='skill_ratings')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name', ]
+        verbose_name = 'Skill'
+        verbose_name_plural = 'Skills'
+
+    def get_tags_string(self):
+        return ', '.join(t for t in self.tags.names())
+
+    def get_item_type(self):
+        return SkillCategory(self.category).name
+
+
+class SkillRatings(models.Model):
+    grade = models.IntegerField(choices=Grade.choices(), default=Grade.Basic)
+    skill = models.ForeignKey(SkillItem, on_delete=models.CASCADE, blank=False, null=False)
+    description = models.CharField(max_length=1000, unique=False)
+
+    class Meta:
+        ordering = ['grade', ]
+        verbose_name = 'SkillRating'
+        verbose_name_plural = 'SkillRatings'
+
+    def get_item_type(self):
+        return Grade(self.grade).name
+
+
+class RatedSkillItem(models.Model):
+    resource_item = models.ForeignKey('ResourceItem', on_delete=models.CASCADE)
+    grade = models.IntegerField(choices=Grade.choices(), default=Grade.Basic)
+    skill = models.ForeignKey(SkillItem, on_delete=models.CASCADE, blank=False, null=False)
+    mind = models.IntegerField(default=5, blank=True, null=True)
+    time = models.IntegerField(default=10, blank=True, null=True)
+    one_use_per_game = models.BooleanField(default=False, blank=True, null=True)
+
+    def __str__(self):
+        x = Grade(self.grade).name
+        return f'{x} {self.skill.name} [{self.mind} mind , {self.time} minutes]'

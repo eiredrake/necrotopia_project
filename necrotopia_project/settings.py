@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'django_password_validators',
     'django_password_validators.password_history',
     'django_bootstrap_icons',
+    'taggit',
     'necrotopia',
 ]
 
