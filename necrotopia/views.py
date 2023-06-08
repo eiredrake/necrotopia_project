@@ -3,7 +3,7 @@ import re
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
-from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.shortcuts import render, redirect
 from django.template import RequestContext
@@ -16,7 +16,7 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
 from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfileForm
-from necrotopia.models import UserProfile
+from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly
 from necrotopia.token import account_activation_token
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIR
@@ -184,3 +184,44 @@ def user_profile_change(request, template='necrotopia/user_profile_change.html')
     context['form'] = form
 
     return render(request, template, context=context)
+
+
+def search_results(request):
+    search_terms = []
+    all_rules_found = []
+    context = {'title': GLOBAL_SITE_NAME, 'search_terms': search_terms}
+
+    if request.method == 'POST':
+        search_terms = request.POST['search_terms']
+        search_terms_list = list(search_terms.lower().split(','))
+
+        blueprints_by_name = ModuleAssembly.objects.filter(name__icontains=search_terms)
+        blueprints_by_tag = ModuleAssembly.objects.filter(tags__name__in=search_terms)
+        all_blueprints_found = blueprints_by_name.union(blueprints_by_tag).order_by('name')
+
+        rules_by_name = Rule.objects.filter(name__icontains=search_terms)
+        rules_by_tag = Rule.objects.filter(tags__name__in=search_terms_list)
+        all_rules_found = rules_by_name.union(rules_by_tag).order_by('name')
+        context['all_rules_found'] = all_rules_found
+        context['all_blueprints_found'] = all_blueprints_found
+        context['search_terms'] = search_terms_list
+
+    return render(request, 'necrotopia/search_results.html', context)
+
+
+def rules_list(request):
+    return render(request, 'necrotopia/rules_list.html', context={"rules_found":  Rule.objects.all()})
+
+
+def rule_view(request, rule_id):
+    try:
+        rule = Rule.objects.get(pk=rule_id)
+        pictures = RulePicture.objects.filter(rule_item_id=rule_id)
+    except Rule.DoesNotExist:
+        raise Http404("That rule does not exist")
+    context = {
+        'rule': rule,
+        'pictures': pictures,
+    }
+    return render(request, 'necrotopia/rule_view.html', context=context)
+

@@ -1,0 +1,24 @@
+{% extends "necrotopia/base.html" %}
+{% load static %}
+{% get_media_prefix %}
+{% load imagekit %}
+{% block title %}{{ rule.name }}{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <h1 class="mercantile-section-header-dark text-dark"><i class="fa-solid fa-gavel mercantile-section-icon"></i>Rule: {{ rule.name }}</h1>
+        <div class="mercantile-table-block-light">
+            <div>
+                <b>Tags: </b><em>{{ rule.get_tags_string }}</em>
+            </div>
+            <div class="col-lg-6 col-sm-6">
+                {{ rule.text }}
+            </div>
+            <div class="col-lg-6 col-sm-6 mercantile-table-block-light">
+                {% for picture in pictures %}
+                    <a href="{{ picture.picture.url }}"><img class="rounded" src="{{ picture.picture.url }}" alt="picture.picture"/></a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

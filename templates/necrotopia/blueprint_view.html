@@ -1,0 +1,46 @@
+{% extends "necrotopia/base.html" %}
+{% load static %}
+{% get_media_prefix %}
+{% load imagekit %}
+{% block title %}{{ blueprint.name }}{% endblock %}
+{% block content %}
+<div class="container-fluid no-padding no_border">
+	<div class="no_border no_background" style="width: 100%;">
+        <div class="card-header necrotopia-list-titlebar_dark">
+            <h4 class="necrotopia-item-titlebar_dark">
+                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>{{ blueprint.name }}
+            </h4>
+        </div>
+        <div class="necrotopia-main-content-padding necrotopia-item-card">
+            {{ blueprint.details }}
+		</div>
+        <div class="container-fluid necrotopia-item-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-2">Item Type</th>
+                        <td>{{ item_type }}</td>
+                    </tr>
+                <tr>
+                    <th class="col-2">Expiration</th>
+                    <td>{{ expiration }}</td>
+                </tr>
+                <tr>
+                    <th class="col-2">Print Duplication</th>
+                    <td>{{ blueprint.print_duplication }}</td>
+                </tr>
+                <tr>
+                    <th class="col-2">Tags</th>
+                    <td><em>{{ tags }}</em></td>
+                </tr>
+                </thead>
+            </table>
+        </div>
+{#        Parts List#}
+        <div>
+            <h5>Parts List</h5>
+            {{ parts_list }}
+        </div>
+	</div>
+</div>
+{% endblock content %}

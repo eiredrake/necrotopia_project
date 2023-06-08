@@ -1,0 +1,29 @@
+{% extends "necrotopia/base.html" %}
+{% load static %}
+{% get_media_prefix %}
+{% load imagekit %}
+{% block title %}{% endblock title %}
+
+
+{% block content %}
+    <div class="container-fluid no-padding">
+        {% if search_terms|length > 0 %}
+            {% if all_rules_found|length > 0 or all_blueprints_found|length > 0 %}
+                {% if all_rules_found|length > 0 %}
+                    {% block rules %}
+                        {% include 'necrotopia/rules_list.html' with all_rules_found=all_rules_found %}
+                    {% endblock rules %}
+                {% endif %}
+                {% if all_blueprints_found|length > 0 %}
+                    {% block blueprints %}
+                        {% include 'necrotopia/blueprint_list.html' with all_blueprints_found=all_blueprints_found %}
+                    {% endblock blueprints %}
+                {% endif %}
+            {% else %}
+                <h1>We did not find anything matching your search terms</h1>
+            {% endif %}
+        {% else %}
+            <h1>You did not enter any search terms</h1>
+        {% endif %}
+    </div>
+{% endblock content %}

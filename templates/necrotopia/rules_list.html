@@ -1,0 +1,44 @@
+{% load static %}
+{% load imagekit %}
+{% block content %}
+<div class="container-fluid accordion no-padding" id="accordionExample">
+	<div class="card" style="width: 100%;">
+		<div class="card-header necrotopia-main-content-2" id="rules_heading">
+		  <h5 class="mb-0 collapsible-header">
+			<button class="btn btn-link mercantile-section-header-dark text-dark collapsible-header" type="button" data-toggle="collapse" data-target="#collapse_rule" aria-expanded="true" aria-controls="collapse_rule">
+				<h1 class="necrotopia-main-content-2 text-dark"><i class="fa-solid fa-book-open mercantile-section-icon"></i>{{ all_rules_found|length }} rules Found</h1>
+			</button>
+		  </h5>
+		</div>
+
+		<div id="collapse_rule" class="collapse show" aria-labelledby="rules_heading" data-parent="#accordionExample">
+		  <div class="card-body necrotopia-main-content-2">
+			<div class="mercantile-table-block-light no-padding">
+				<div class="col-lg">
+					<table class="table table-striped table-bordered table-hover">
+                        <caption>List of Rules</caption>
+						<thead>
+							<tr>
+								<th>Rule</th>
+								<th>Book Reference</th>
+                                <th>Slug</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for rule in all_rules_found %}
+							<tr>
+                                <td><a class="btn-link" href="{% url "rule_view" rule_id=rule.id %}">{{ rule.name }}</a></td>
+                                <td>{{ rule.reference }}</td>
+                                <td>{{ rule.slug }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	</div>
+</div>
+{% endblock content %}
