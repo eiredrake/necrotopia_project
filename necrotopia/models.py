@@ -4,8 +4,9 @@ from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Pe
     PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
-from django.core.validators import EmailValidator
+from django.core.validators import EmailValidator, MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import CheckConstraint, Q
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _translate
@@ -568,3 +569,161 @@ class ModuleAssembly(models.Model):
     class Meta:
         verbose_name = 'Blueprint'
         verbose_name_plural = 'Blueprints'
+
+
+class Character(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255, unique=False, blank=False, null=False)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='registrar')
+
+    def __str__(self):
+        return self.name
+
+
+class FinancialInstitutionModifier(IntEnum):
+    very_poor = -3
+    poor = -2
+    below_average = -1
+    average = 0
+    good = 1
+    very_good = 2
+    outstanding = 3
+
+    def __str__(self):
+        return "{label} ({modifier})".format(label=self.name, modifier=self.value).title().replace("_", " ")
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, str(key)) for key in cls]
+
+
+class FinancialInstitutionPicture(models.Model):
+    picture = models.ImageField(upload_to='static_images')
+    img_Institution = models.ForeignKey('FinancialInstitution', blank=False, null=False, on_delete=models.CASCADE,
+                                      related_name='img_picture_FinancialInstitution')
+
+    def image_preview(self):
+        if self.picture:
+            return mark_safe(
+                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
+        else:
+            return '(No image)'
+
+    def __str__(self):
+        return self.picture.name
+
+
+class FinancialInstitution(models.Model):
+    branch = models.ForeignKey(Chapter, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255, unique=True)
+    slug = models.CharField(max_length=255, unique=False, blank=True, null=True)
+    text = models.CharField(max_length=2048, unique=False, blank=True, null=True)
+    active = models.BooleanField(default=False)
+    published = models.BooleanField(default=False)
+    modifier = models.IntegerField(choices=FinancialInstitutionModifier.choices(),
+                                   default=FinancialInstitutionModifier.average, blank=False, null=False)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    images = models.ForeignKey(FinancialInstitutionPicture, blank=True, null=True, on_delete=models.CASCADE,
+                                 related_name='institution_pictures')
+
+    def __str__(self):
+        return "{} [{:+}]".format(self.name, self.modifier)
+
+
+class FinancialInvestment(models.Model):
+    character = models.ForeignKey(Character, blank=False, null=False, on_delete=models.CASCADE,
+                                  related_name='character')
+    institution = models.ForeignKey(FinancialInstitution, blank=False, null=False, on_delete=models.CASCADE)
+    amount_invested = models.IntegerField(blank=False, null=False, default=4)
+    die_roll = models.IntegerField(blank=False, null=False, default=1)
+    modifier = models.IntegerField(blank=False, null=False, default=0)
+    roll_total = models.IntegerField(blank=False, null=False, default=0)
+    investment_date = models.DateTimeField('investment_date', default=timezone.now)
+
+    def __str__(self):
+        return "{character} invested {currency} currency in {institution} on {date}".format(character=self.character, currency=self.amount_invested, institution=self.institution.name, date=self.investment_date)
+
+
+class LootTableItem(models.Model):
+    item_name = models.CharField(max_length=255, unique=True)
+    probability = models.FloatField(null=False, blank=False,
+                                    validators=[MinValueValidator(0.0), MaxValueValidator(1.0)])
+    loot_table = models.ForeignKey('LootTable', blank=False, null=False, on_delete=models.CASCADE,
+                                   related_name='loot_table')
+
+    class Meta:
+        constraints = (
+            # for checking in the DB
+            CheckConstraint(
+                check=Q(probability__gte=0.0) & Q(probability__lte=1.0),
+                name='probability_range'),
+        )
+
+    def __str__(self):
+        return self.item_name
+
+
+class LootTable(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    loot_items = models.ForeignKey(LootTableItem, blank=True, null=True, on_delete=models.CASCADE,
+                                   related_name='loot_items')
+
+    def __str__(self):
+        return self.name
+
+
+class InvestmentResult(IntEnum):
+    Major_Loss = 1
+    Minor_Loss = 2
+    Break_Even = 3
+    Minor_Gain = 4
+    Major_Gain = 5
+    Jackpot = 6
+
+    def __str__(self):
+        return str(self.name)
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
+
+    @staticmethod
+    def instructions_from_die_result(die_result: int):
+        result = "Major Loss - collect 4 from player"
+        match die_result:
+            case InvestmentResult.Minor_Loss:
+                result = "Minor Loss - collect 2 from player"
+            case InvestmentResult.Break_Even:
+                result = "Broke Even - give player back 4"
+            case InvestmentResult.Minor_Gain:
+                result = "Minor Gain - give player back 5"
+            case InvestmentResult.Major_Gain:
+                result = "Major gain - give player back 6"
+            case _ if die_result >= InvestmentResult.Jackpot:
+                result = "Jackpot! - give player back 8"
+            case other:
+                result = result
+
+        return result
+    @staticmethod
+    def descriptor_from_die_result(die_result: int):
+        result = "Major Loss - lost investment"
+        match die_result:
+            case InvestmentResult.Minor_Loss:
+                result = "Minor Loss - lost half of investment"
+            case InvestmentResult.Break_Even:
+                result = "Broke Even - no gain, no losses"
+            case InvestmentResult.Minor_Gain:
+                result = "Minor Gain - gained 1"
+            case InvestmentResult.Major_Gain:
+                result = "Major gain - gained 2"
+            case _ if die_result >= InvestmentResult.Jackpot:
+                result = "Jackpot! - gained 4"
+            case other:
+                result = result
+
+        return result

@@ -11,12 +11,15 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.timezone import make_aware
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
+from rolldice import rolldice
 from taggit.forms import TagField, TextareaTagWidget
 
-from necrotopia.forms import RegisterUserForm
+from necrotopia.forms import RegisterUserForm, FinancialInvestmentAddForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
-    ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf
+    ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
+    FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, \
+    FinancialInstitutionPicture
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -408,6 +411,13 @@ class ItemPictureInLine(NestedTabularInline):
     readonly_fields = ('image_preview',)
 
 
+class FinancialInstitutionPictureInLine(NestedTabularInline):
+    model = FinancialInstitutionPicture
+    extra = 0
+    fields = ('picture', 'image_preview')
+    readonly_fields = ('image_preview',)
+
+
 class ModuleResourceInline(NestedTabularInline):
     extra = 0
     model = ModuleGradeResource
@@ -522,3 +532,110 @@ class ModuleAssemblyAdmin(NestedModelAdmin):
             form.base_fields['details'].widget.attrs['style'] = 'width: 100em; height: 5em;'
 
         return form
+
+
+@admin.register(FinancialInstitution)
+class FinancialInstitutionAdmin(NestedModelAdmin):
+    list_display = ('branch', 'name', 'active', 'published', 'modifier', 'registry_date', 'registrar')
+    list_display_links = list_display
+    ordering = ('branch', 'name',)
+    search_fields = ('branch', 'name',)
+
+    inlines = [
+        FinancialInstitutionPictureInLine
+    ]
+
+    fieldsets = (
+        (None,
+         {
+             'fields':
+                 (
+                     'branch',
+                     'name',
+                     'slug',
+                     'text',
+                     'active',
+                     'published',
+                     'modifier',
+                 )
+         }),
+        ('Registrar', {
+            'classes': ('collapse',),
+            'fields': ('registrar', 'registry_date',),
+        }),
+    )
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(FinancialInstitutionAdmin, self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        return get_data
+
+
+@admin.register(FinancialInvestment)
+class FinancialInvestmentAdmin(admin.ModelAdmin):
+    list_display = ('character', 'investment_date', 'institution', 'amount_invested', 'die_roll', 'modifier', 'roll_total', 'end_result', )
+    list_display_links = list_display
+    ordering = ('-investment_date', 'institution', 'character', 'amount_invested')
+    # search_fields = ('institution', 'character',)
+    add_form = FinancialInvestmentAddForm
+    change_form_template = "necrotopia/investment_admin.html"
+    add_form_template = "necrotopia/investment_admin.html"
+    readonly_fields = ('die_roll', 'modifier', 'end_result')
+    show_close_button = True
+
+    fieldsets = (
+        (None,
+         {
+             'fields': ('character', 'institution', 'investment_date', )
+         }),
+        ('Results', {
+            'classes': ('expand',),
+            'fields': ('amount_invested', 'die_roll', 'modifier', 'end_result'),
+        }),
+    )
+
+    def institution_modifier(self, request):
+        if type(request) is FinancialInvestment:
+            institution = request.institution
+            return str(FinancialInstitutionModifier(institution.modifier))
+
+    def end_result(self, request):
+        if type(request) is FinancialInvestment:
+            investment_result = InvestmentResult.descriptor_from_die_result(request.roll_total)
+
+            return investment_result
+
+    def each_context(self, request):
+        context = super().each_context(request)
+        context['show_close'] = True
+        return context
+
+    @staticmethod
+    def die_roll_and_save(self, request, obj):
+        if "_roll_investment;" in request.POST:
+            die_string = ''
+            institution = obj.institution
+            if institution.modifier > 0:
+                die_string += "1d6+{modifier}".format(modifier=institution.modifier)
+            elif institution.modifier < 0:
+                die_string += "1d6{modifier}".format(modifier=institution.modifier)
+            else:
+                die_string += "1d6"
+
+            result, explanation = rolldice.roll_dice('1d6')
+            roll_total = result + institution.modifier
+            result_string = InvestmentResult.instructions_from_die_result(roll_total)
+
+            obj.die_roll = result
+            obj.modifier = institution.modifier
+            obj.roll_total = roll_total
+            obj.save()
+            self.message_user(request, "Rolled: {die_string}={roll_total} [{result_string}]".format(die_string=die_string, roll_total=roll_total, result_string=result_string))
+            #return HttpResponseRedirect(".")
+        return super().response_change(request, obj)
+
+    def response_change(self, request, obj):
+        return FinancialInvestmentAdmin.die_roll_and_save(self, request, obj)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        return FinancialInvestmentAdmin.die_roll_and_save(self, request, obj)
