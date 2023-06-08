@@ -7,6 +7,7 @@ from django.core.mail import send_mail
 from django.core.validators import EmailValidator
 from django.db import models
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _translate
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
@@ -397,3 +398,173 @@ class RatedSkillItem(models.Model):
     def __str__(self):
         x = Grade(self.grade).name
         return f'{x} {self.skill.name} [{self.mind} mind , {self.time} minutes]'
+
+
+class RulePicture(models.Model):
+    picture = models.ImageField(upload_to='static_images')
+    rule_item = models.ForeignKey('Rule', blank=False, null=False, on_delete=models.CASCADE,
+                                  related_name='picture_rule')
+
+    def image_preview(self):
+        if self.picture:
+            return mark_safe(
+                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
+        else:
+            return '(No image)'
+
+    def __str__(self):
+        return self.picture.name
+
+
+class Rule(models.Model):
+    name = models.CharField(max_length=255, unique=False)
+    reference = models.CharField(max_length=255, unique=False, blank=True, null=True)
+    slug = models.CharField(max_length=255, unique=False, blank=True, null=True)
+    text = models.CharField(max_length=2048, unique=False, blank=True, null=True)
+    creation_date = models.DateTimeField('creation_date', default=timezone.now)
+    creator = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
+    pictures = models.ForeignKey(RulePicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
+
+    def __str__(self):
+        return self.name
+
+    def get_tags_string(self):
+        return ', '.join(t for t in self.tags.names())
+
+    def partial_slug(self):
+        return "{slug}...".format(slug=self.slug[:50])
+
+
+class ItemPdf(models.Model):
+    pdf = models.FileField(upload_to='pdf/', null=True, blank=True)
+    pdf_assembly_item = models.ForeignKey('ModuleAssembly', blank=False, null=False, on_delete=models.CASCADE,
+                                      related_name='pdf_picture_ModuleAssembly')
+
+
+class ItemPicture(models.Model):
+    picture = models.ImageField(upload_to='static_images')
+    imd_assembly_item = models.ForeignKey('ModuleAssembly', blank=False, null=False, on_delete=models.CASCADE,
+                                      related_name='img_picture_ModuleAssembly')
+
+    def image_preview(self):
+        if self.picture:
+            return mark_safe(
+                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
+        else:
+            return '(No image)'
+
+    def __str__(self):
+        return self.picture.name
+
+
+class ModuleGradeResource(models.Model):
+    quantity = models.IntegerField(default=1)
+    resource = models.ForeignKey(ResourceItem, on_delete=models.CASCADE, blank=True, null=True,
+                                 related_name='%(class)s_resource')
+    parent_grade = models.ForeignKey('ModuleGrade', on_delete=models.CASCADE, blank=False, null=False)
+
+    class Meta:
+        verbose_name = 'Resource'
+        verbose_name_plural = 'Resources'
+
+    def __str__(self):
+        return ''
+
+
+class ModuleGradeSubAssembly(models.Model):
+    quantity = models.IntegerField(default=1)
+    grade = models.IntegerField(choices=Grade.choices(), default=Grade.Ungraded)
+    assembly = models.ForeignKey('ModuleAssembly', on_delete=models.CASCADE, blank=True, null=True,
+                                 related_name='%(class)s_sub_assembly')
+    parent_grade = models.ForeignKey('ModuleGrade', on_delete=models.CASCADE, blank=False, null=False)
+
+    class Meta:
+        verbose_name = 'Crafted Item'
+        verbose_name_plural = 'Crafted Items'
+
+    def __str__(self):
+        return ''
+
+
+class ModuleGrade(models.Model):
+    grade = models.IntegerField(choices=Grade.choices(), default=Grade.Basic)
+    name = models.CharField(max_length=255, unique=False)
+    mind = models.IntegerField(default=5, blank=True, null=True)
+    time = models.IntegerField(default=20, blank=True, null=True)
+    mechanics = models.CharField(max_length=1000, blank=True, null=True)
+    module_assembly = models.ForeignKey('ModuleAssembly', on_delete=models.CASCADE, blank=True, null=True,
+                                        related_name='moduleAssembly_parent')
+    resources = models.ForeignKey(ModuleGradeResource, on_delete=models.CASCADE, blank=True, null=True)
+    sub_assemblies = models.ForeignKey(ModuleGradeSubAssembly, on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+    def get_grade_name(self):
+        return Grade(self.grade).name
+
+    def get_grade_resources(self):
+        return self.resources
+
+    class Meta:
+        verbose_name = 'Item Grade'
+        verbose_name_plural = 'Item Grades'
+
+
+class ModuleAssembly(models.Model):
+    line_id = models.AutoField(primary_key=True, blank=False, null=False, unique=True)
+    name = models.CharField(max_length=255, unique=False)
+    expiration_units = models.SmallIntegerField(default=0, blank=True, null=True)
+    time_units = models.IntegerField(choices=TimeUnits.choices(), default=TimeUnits.No_Expiration)
+    item_type = models.IntegerField(choices=ComponentType.choices(), default=ComponentType.Gizmo)
+    achievement_mechanics = models.CharField(blank=True, null=True, max_length=1000)
+    print_duplication = models.CharField(blank=True, null=True, max_length=1000)
+    details = models.CharField(blank=True, null=True, max_length=1000)
+    registration_date = models.DateTimeField('registration_date', default=timezone.now)
+    last_update_date = models.DateTimeField('last_update_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    crafting_tree = models.CharField(max_length=100, unique=False, blank=True, null=True, default='Artisan')
+    crafting_area = models.CharField(max_length=100, unique=False, blank=True, null=True,
+                                     default='Mechanical Crafting Zone')
+    usage_tree = models.CharField(max_length=100, unique=False, blank=True, null=True, default='n/a')
+    update_required = models.BooleanField(default=False, blank=True, null=True)
+    visual_description = models.CharField(max_length=1000, unique=False, blank=True, null=True)
+    season = models.CharField(max_length=50, unique=False, blank=True, null=True)
+    published = models.BooleanField(default=True)
+    checked = models.BooleanField(default=False)
+    tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
+    module_grades = models.ForeignKey(ModuleGrade, on_delete=models.CASCADE, blank=True, null=True,
+                                      related_name='moduleGrade_grades')
+
+    def flatten(self):
+        result = dict()
+        grades = ModuleGrade.objects.filter(module_assembly_id=self.line_id)
+
+        if grades is not None:
+            for grade in grades:
+                pass
+
+        return result
+
+    def get_item_type(self):
+        return ComponentType(self.item_type).name
+
+    def get_tags_string(self):
+        return ', '.join(t for t in self.tags.names())
+
+    def get_expiration(self):
+        if self.expiration_units == 0 or self.time_units == TimeUnits.No_Expiration:
+            return 'None'
+        else:
+            expiration_units_string = str(self.expiration_units)
+            time_string = TimeUnits(self.time_units).name
+
+            return f'{expiration_units_string} {time_string}'
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Blueprint'
+        verbose_name_plural = 'Blueprints'

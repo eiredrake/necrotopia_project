@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import django.forms.models
 from django.contrib import admin
 from django.contrib.admin.checks import InlineModelAdminChecks
@@ -7,12 +9,14 @@ from django.db import models
 from django.forms import TextInput, Textarea
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.utils.timezone import make_aware
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
 from taggit.forms import TagField, TextareaTagWidget
 
 from necrotopia.forms import RegisterUserForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
-    ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory
+    ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
+    ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -341,3 +345,180 @@ class SkillItemAdmin(NestedModelAdmin):
                        'categories': SkillCategory.choices()})
 
     set_skill_category.short_description = 'Change Category'
+
+
+class RulePictureInLine(NestedTabularInline):
+    model = RulePicture
+    extra = 0
+    fields = ('picture', 'image_preview')
+    readonly_fields = ('image_preview',)
+
+
+class RuleAdminForm(forms.ModelForm):
+    class Meta:
+        model = Rule
+        fields = '__all__'
+        widgets = {
+            'text': forms.Textarea(attrs={'rows': 10, 'cols': '100'})
+        }
+
+@admin.register(Rule)
+class RuleAdmin(NestedModelAdmin):
+    tag_display = ['tag_list']
+    list_display = ('name', 'partial_slug', 'reference', 'tag_list')
+    list_display_links = list_display
+    inlines = [
+        RulePictureInLine,
+    ]
+    form = RuleAdminForm
+    fieldsets = (
+        (None,
+         {
+             'fields': ('name', 'reference', 'slug', 'text', 'tags')
+         }),
+        ('Creator', {
+            'classes': ('collapse',),
+            'fields': ('creator', 'creation_date'),
+        }),
+    )
+
+    def get_changeform_initial_data(self, request):
+        get_data = {'creator': request.user.pk}
+        return get_data
+
+    def tag_list(self, obj):
+        the_tags = obj.tags.all().order_by('name')
+        return u", ".join(o.name for o in the_tags)
+
+    def images(self, obj):
+        if obj.pictures is not None:
+            return obj.pictures.count()
+
+
+class ItemPdfInLine(NestedTabularInline):
+    model = ItemPdf
+    extra = 0
+    fields = ('pdf', )
+
+
+class ItemPictureInLine(NestedTabularInline):
+    model = ItemPicture
+    extra = 0
+    fields = ('picture', 'image_preview')
+    readonly_fields = ('image_preview',)
+
+
+class ModuleResourceInline(NestedTabularInline):
+    extra = 0
+    model = ModuleGradeResource
+    fields = ('quantity', 'resource')
+
+
+class ModuleSubAssemblyInLine(NestedTabularInline):
+    extra = 0
+    model = ModuleGradeSubAssembly
+    fields = ('quantity', 'grade', 'assembly')
+
+
+class ModuleGradeInline(NestedTabularInline):
+    extra = 0
+    max_num = 3
+    model = ModuleGrade
+    fields = ('grade', 'name', 'mind', 'time', 'mechanics')
+    inlines = [
+        ModuleResourceInline,
+        ModuleSubAssemblyInLine,
+    ]
+
+
+class ModuleGradeInline(NestedTabularInline):
+    extra = 0
+    max_num = 3
+    model = ModuleGrade
+    fields = ('grade', 'name', 'mind', 'time', 'mechanics')
+    inlines = [
+        ModuleResourceInline,
+        ModuleSubAssemblyInLine,
+    ]
+
+
+@admin.register(ModuleAssembly)
+class ModuleAssemblyAdmin(NestedModelAdmin):
+    tag_display = ['tag_list']
+    list_display = ('name', 'item_type', 'published', 'checked', 'last_update_date', 'expiration', 'tag_list')
+    list_display_links = list_display
+    ordering = ('name',)
+    search_fields = ('name', 'published', 'checked', 'tags__name',)
+    inlines = [
+        ItemPictureInLine,
+        ItemPdfInLine,
+        ModuleGradeInline,
+    ]
+    fieldsets = (
+        (None,
+         {
+             'fields':
+                 (
+                     'name',
+                     'expiration_units',
+                     'time_units',
+                     'item_type',
+                     'visual_description',
+                     'published',
+                     'checked',
+                     'achievement_mechanics',
+                     'print_duplication',
+                     'tags',
+                 )
+         }),
+        ('Crafting and Usage', {
+                'classes': ('collapse',),
+                'fields': ('crafting_tree', 'crafting_area', 'usage_tree'),
+        }),
+        ('Details', {
+            'classes': ('collapse',),
+            'fields': ('details', 'season'),
+        }),
+        ('Registrar', {
+            'classes': ('collapse',),
+            'fields': ('registrar', 'registration_date', 'last_update_date'),
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        obj.last_update_date = make_aware(datetime.now())
+        obj.save()
+
+    def expiration(self, obj):
+        if obj.time_units != TimeUnits.No_Expiration:
+            x = TimeUnits(obj.time_units).name
+            return f'{obj.expiration_units} {x}'
+
+    def tag_list(self, obj):
+        the_tags = obj.tags.all().order_by('name')
+        return u", ".join(o.name for o in the_tags)
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(ModuleAssemblyAdmin, self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        return get_data
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(ModuleAssemblyAdmin, self).get_form(request, obj, **kwargs)
+
+        if 'name' in form.base_fields:
+            form.base_fields['name'].widget.attrs['style'] = 'width: 45em;'
+
+        if 'achievement_mechanics' in form.base_fields:
+            form.base_fields['achievement_mechanics'].widget.attrs['style'] = 'width: 45em;'
+
+        if 'print_duplication' in form.base_fields:
+            form.base_fields['print_duplication'].widget.attrs['style'] = 'width: 45em;'
+
+        if 'tags' in form.base_fields:
+            form.base_fields['tags'].widget.attrs['style'] = 'width: 100em; height: 5em;'
+
+        if 'details' in form.base_fields:
+            form.base_fields['details'].widget.attrs['style'] = 'width: 100em; height: 5em;'
+
+        return form
