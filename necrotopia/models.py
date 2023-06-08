@@ -111,8 +111,6 @@ class SkillCategory(IntEnum):
         return [(key.value, key.name) for key in cls]
 
 
-
-
 class Title(models.Model):
     descriptor = models.CharField(max_length=30, blank=False, null=False)
 
@@ -343,7 +341,7 @@ class ResourceItem(models.Model):
 
 class SkillItem(models.Model):
     name = models.CharField(max_length=255, unique=False)
-    category = models.IntegerField(choices=SkillCategory.choices(), default=SkillCategory.Combat)
+    category = models.IntegerField(choices=sorted(SkillCategory.choices(), key=lambda x: x[1]), default=SkillCategory.Anomaly)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
@@ -364,11 +362,20 @@ class SkillItem(models.Model):
     def get_item_type(self):
         return SkillCategory(self.category).name
 
+    def trunc_description(self):
+        result = ''
+        if self.skillratings_set is not None:
+            first = self.skillratings_set.first()
+            if first is not None:
+                result = "{description}...".format(description=first.description[:50])
+
+        return result
+
 
 class SkillRatings(models.Model):
     grade = models.IntegerField(choices=Grade.choices(), default=Grade.Basic)
     skill = models.ForeignKey(SkillItem, on_delete=models.CASCADE, blank=False, null=False)
-    description = models.CharField(max_length=1000, unique=False)
+    description = models.CharField(max_length=3000, unique=False)
 
     class Meta:
         ordering = ['grade', ]

@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.contrib.admin.checks import InlineModelAdminChecks
 from django.contrib.admin.helpers import ActionForm
 from django.contrib.auth.admin import UserAdmin
+from django.db import models
+from django.forms import TextInput, Textarea
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
@@ -124,12 +126,14 @@ class UsefulLinksInline(NestedTabularInline):
     extra = 0
     model = UsefulLinks
     fields = ('name', 'published', 'url')
+    classes = ('collapse', )
 
 
 class ChapterStaffInline(NestedTabularInline):
     extra = 0
     model = ChapterStaff
     fields = ('user_profile', 'department', 'type')
+    classes = ('collapse', )
 
     verbose_name = "Chapter Staff Member"
     verbose_name_plural = "Chapter Staff"
@@ -141,6 +145,10 @@ class DepartmentAdmin(NestedModelAdmin):
     list_display_links = list_display
     ordering = ('name', )
     search_fields = ('name', )
+
+    def get_changeform_initial_data(self, request):
+        get_data = {'registrar': request.user.pk}
+        return get_data
 
 
 @admin.register(Chapter)
@@ -155,10 +163,6 @@ class ChapterAdmin(NestedModelAdmin):
          {
              'fields': ('name', 'active', )
          }),
-        ('Staff', {
-            'classes': ('collapse',),
-            'fields': ('staff',),
-        }),
         ('Registrar', {
             'classes': ('collapse',),
             'fields': ('registrar', 'registry_date'),
@@ -199,6 +203,9 @@ class SkillRatingInline(NestedTabularInline):
     extra = 0
     model = SkillRatings
     fields = ('grade', 'description')
+    formfield_overrides = {
+        models.CharField: {'widget': Textarea(attrs={'rows': '20', 'cols': '80'})},
+    }
 
 
 @admin.register(ResourceItem)
@@ -290,7 +297,7 @@ class SkillCategoryForm(forms.Form):
 @admin.register(SkillItem)
 class SkillItemAdmin(NestedModelAdmin):
     tag_display = ['tag_list']
-    list_display = ('name', 'category', 'tag_list')
+    list_display = ('name', 'category', 'trunc_description', 'tag_list')
     search_fields = ('name', 'category', 'tags__name')
     fieldsets = (
         (None,
@@ -320,7 +327,7 @@ class SkillItemAdmin(NestedModelAdmin):
         if 'do_action' in request.POST:
             form = SkillCategoryForm(request.POST)
             if form.is_valid():
-                category = form.cleaned_data['categories']
+                category = SkillCategory(int(form.cleaned_data['categories']))
                 updated = queryset.update(category=category)
                 messages.success(request, '{0} records were updated'.format(updated))
                 return
