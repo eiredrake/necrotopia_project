@@ -1,6 +1,7 @@
 import django.forms.models
 from django.contrib import admin
 from django.contrib.admin.checks import InlineModelAdminChecks
+from django.contrib.admin.helpers import ActionForm
 from django.contrib.auth.admin import UserAdmin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -9,7 +10,7 @@ from taggit.forms import TagField, TextareaTagWidget
 
 from necrotopia.forms import RegisterUserForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
-    ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department
+    ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -282,6 +283,10 @@ class ResourceItemAdmin(NestedModelAdmin):
         return get_data
 
 
+class SkillCategoryForm(forms.Form):
+    categories = forms.ChoiceField(choices=SkillCategory.choices())
+
+
 @admin.register(SkillItem)
 class SkillItemAdmin(NestedModelAdmin):
     tag_display = ['tag_list']
@@ -292,9 +297,9 @@ class SkillItemAdmin(NestedModelAdmin):
          {
              'fields': ('name', 'category', 'tags')
          }),
-        ('Creator', {
+        ('Registrar', {
             'classes': ('collapse',),
-            'fields': ('creator', 'creation_date'),
+            'fields': ('registrar', 'registry_date'),
         }),
     )
     inlines = [
@@ -306,5 +311,26 @@ class SkillItemAdmin(NestedModelAdmin):
         return u", ".join(o.name for o in the_tags)
 
     def get_changeform_initial_data(self, request):
-        get_data = {'creator': request.user.pk}
+        get_data = {'registrar': request.user.pk}
         return get_data
+
+    actions = ['set_skill_category']
+
+    def set_skill_category(self, request, queryset):
+        if 'do_action' in request.POST:
+            form = SkillCategoryForm(request.POST)
+            if form.is_valid():
+                category = form.cleaned_data['categories']
+                updated = queryset.update(category=category)
+                messages.success(request, '{0} records were updated'.format(updated))
+                return
+        else:
+            form = SkillCategoryForm()
+
+        return render(request, 'necrotopia/skill_category_selector.html',
+                      {'title': u'Choose new category',
+                       'objects': queryset,
+                       'form': form,
+                       'categories': SkillCategory.choices()})
+
+    set_skill_category.short_description = 'Change Category'
