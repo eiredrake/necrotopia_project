@@ -163,5 +163,3 @@ cython_debug/
 /ca-certificate.crt
 
 .idea/
-/static/
-/media/
