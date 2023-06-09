@@ -216,6 +216,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 print("STATIC_ROOT {static_folder}".format(static_folder=STATIC_ROOT))
 print("STATIC_URL {static_folder}".format(static_folder=STATIC_URL))
+
+print("MEDIA_URL {static_folder}".format(static_folder=MEDIA_URL))
+print("MEDIA_ROOT {static_folder}".format(static_folder=MEDIA_ROOT))
+
 print("STATICFILES_DIR {static_folder}".format(static_folder=STATICFILES_DIR))
 print("ALLOWED HOSTS {allowed_hosts}".format(allowed_hosts=ALLOWED_HOSTS))
 print("DEBUG {debug}".format(debug=Config.DEBUG))
