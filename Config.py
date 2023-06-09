@@ -32,6 +32,13 @@ class AppConfig:
     EMAIL_HOST_USER: str = ''
     EMAIL_HOST_PASSWORD: str = ''
     EMAIL_PORT = 587
+    AWS_ACCESS_KEY_ID: str = ''
+    AWS_SECRET_ACCESS_KEY: str = ''
+    AWS_STORAGE_BUCKET_NAME: str = ''
+    AWS_S3_ENDPOINT_URL: str = ''
+    AWS_LOCATION: str = ''
+
+
     """
     Map environment variables to class fields according to these rules:
       - Field won't be parsed unless it has a type annotation
