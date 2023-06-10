@@ -666,6 +666,7 @@ class AdvertisementAdmin(NestedModelAdmin):
 
     inlines = [
         AdvertisementInLine
+
     ]
 
     fieldsets = (
