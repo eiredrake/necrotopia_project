@@ -20,7 +20,7 @@ from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gen
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
     FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, \
-    FinancialInstitutionPicture
+    FinancialInstitutionPicture, ChapterPicture
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -159,6 +159,13 @@ class DepartmentAdmin(NestedModelAdmin):
         return get_data
 
 
+class ChapterPictureInLine(NestedTabularInline):
+    model = ChapterPicture
+    extra = 0
+    fields = ('chapter_picture', 'image_preview')
+    readonly_fields = ('image_preview',)
+
+
 @admin.register(Chapter)
 class ChapterAdmin(NestedModelAdmin):
     list_display = ('name', 'active', 'registry_date', 'registrar')
@@ -180,6 +187,7 @@ class ChapterAdmin(NestedModelAdmin):
     inlines = [
         UsefulLinksInline,
         ChapterStaffInline,
+        ChapterPictureInLine,
     ]
 
     def get_changeform_initial_data(self, request):
@@ -356,6 +364,9 @@ class RulePictureInLine(NestedTabularInline):
     extra = 0
     fields = ('picture', 'image_preview')
     readonly_fields = ('image_preview',)
+
+
+
 
 
 class RuleAdminForm(forms.ModelForm):

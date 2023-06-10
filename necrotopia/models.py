@@ -281,6 +281,22 @@ class ChapterStaff(models.Model):
         return self.user_profile.display_name
 
 
+class ChapterPicture(models.Model):
+    chapter_picture = models.ImageField(upload_to='static_images')
+    chapter_link = models.ForeignKey('Chapter', blank=False, null=False, on_delete=models.CASCADE, related_name='chapter_picture')
+
+    def image_preview(self):
+        if self.picture:
+            return mark_safe(
+                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
+        else:
+            return '(No image)'
+
+    def __str__(self):
+        return self.picture.name
+
+
+
 class Chapter(models.Model):
     name = models.CharField(max_length=255, unique=True, blank=False, null=False)
     active = models.BooleanField(blank=False, null=False, default=True)
@@ -288,6 +304,7 @@ class Chapter(models.Model):
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='chapter_registrar')
     useful_links = models.ForeignKey(UsefulLinks, on_delete=models.CASCADE, blank=True, null=True)
     staff = models.ForeignKey(ChapterStaff, null=True, blank=True, on_delete=models.CASCADE)
+    chapter_pictures = models.ForeignKey(ChapterPicture, blank=True, null=True, on_delete=models.CASCADE, related_name='chapter_pictures')
 
     def __str__(self):
         return self.name
