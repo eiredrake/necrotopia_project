@@ -614,6 +614,21 @@ class FinancialInstitutionModifier(IntEnum):
         return [(key.value, str(key)) for key in cls]
 
 
+class InstitutionPicture(models.Model):
+    picture = models.ImageField(upload_to='institutions_images')
+    institution_item = models.ForeignKey('FinancialInstitution', blank=False, null=False, on_delete=models.CASCADE, related_name='picture_institution')
+
+    def image_preview(self):
+        if self.picture:
+            return mark_safe(
+                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
+        else:
+            return '(No image)'
+
+    def __str__(self):
+        return self.picture.name
+
+
 class FinancialInstitution(models.Model):
     branch = models.ForeignKey(Chapter, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, unique=True)
@@ -625,14 +640,14 @@ class FinancialInstitution(models.Model):
                                    default=FinancialInstitutionModifier.average, blank=False, null=False)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    institution_pictures = models.ForeignKey(InstitutionPicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
 
     def __str__(self):
         return "{} [{:+}]".format(self.name, self.modifier)
 
 
 class FinancialInvestment(models.Model):
-    character = models.ForeignKey(Character, blank=False, null=False, on_delete=models.CASCADE,
-                                  related_name='character')
+    character = models.ForeignKey(Character, blank=False, null=False, on_delete=models.CASCADE, related_name='character')
     institution = models.ForeignKey(FinancialInstitution, blank=False, null=False, on_delete=models.CASCADE)
     amount_invested = models.IntegerField(blank=False, null=False, default=4)
     die_roll = models.IntegerField(blank=False, null=False, default=1)
