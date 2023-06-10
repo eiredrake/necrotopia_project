@@ -175,7 +175,7 @@ class ChapterAdmin(NestedModelAdmin):
     fieldsets = (
         (None,
          {
-             'fields': ('name', 'active', )
+             'fields': ('name', 'active', 'chapter_pictures')
          }),
         ('Registrar', {
             'classes': ('collapse',),
