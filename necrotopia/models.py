@@ -288,7 +288,6 @@ class Chapter(models.Model):
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='chapter_registrar')
     useful_links = models.ForeignKey(UsefulLinks, on_delete=models.CASCADE, blank=True, null=True)
     staff = models.ForeignKey(ChapterStaff, null=True, blank=True, on_delete=models.CASCADE)
-    chapter_logo = ProcessedImageField(upload_to='chapter_logos', null=True, blank=True, processors=[ResizeToFill(1024, 433)], format='JPEG', options={'quality': 60})
 
     def __str__(self):
         return self.name
