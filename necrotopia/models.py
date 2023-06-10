@@ -283,7 +283,7 @@ class ChapterStaff(models.Model):
 
 class ChapterPicture(models.Model):
     picture = models.ImageField(upload_to='chapter_images')
-    chapter_item = models.ForeignKey('Chapter', blank=False, null=False, on_delete=models.CASCADE, related_name='picture_rule')
+    chapter_item = models.ForeignKey('Chapter', blank=False, null=False, on_delete=models.CASCADE, related_name='picture_chapter')
 
     def image_preview(self):
         if self.picture:
