@@ -19,7 +19,8 @@ from necrotopia.forms import RegisterUserForm, FinancialInvestmentAddForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
-    FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, ChapterPicture
+    FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, ChapterPicture, \
+    InstitutionPicture
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -51,6 +52,13 @@ def resend_registration_email(modeladmin, request, queryset):
 
 class ChapterPictureInLine(NestedTabularInline):
     model = ChapterPicture
+    extra = 0
+    fields = ('picture', 'image_preview')
+    readonly_fields = ('image_preview',)
+
+
+class FinancialInstitutionPictureInLine(NestedTabularInline):
+    model = InstitutionPicture
     extra = 0
     fields = ('picture', 'image_preview')
     readonly_fields = ('image_preview',)
@@ -453,9 +461,6 @@ class ModuleGradeInline(NestedTabularInline):
     ]
 
 
-
-
-
 @admin.register(ModuleAssembly)
 class ModuleAssemblyAdmin(NestedModelAdmin):
     tag_display = ['tag_list']
@@ -546,7 +551,7 @@ class FinancialInstitutionAdmin(NestedModelAdmin):
     search_fields = ('branch', 'name',)
 
     inlines = [
-
+        FinancialInstitutionPictureInLine
     ]
 
     fieldsets = (
