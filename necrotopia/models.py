@@ -282,8 +282,8 @@ class ChapterStaff(models.Model):
 
 
 class ChapterPicture(models.Model):
-    chapter_picture = models.ImageField(upload_to='static_images')
-    chapter_link = models.ForeignKey('Chapter', blank=False, null=False, on_delete=models.CASCADE, related_name='chapter_picture')
+    picture = models.ImageField(upload_to='chapter_images')
+    chapter_item = models.ForeignKey('Chapter', blank=False, null=False, on_delete=models.CASCADE, related_name='picture_rule')
 
     def image_preview(self):
         if self.picture:
@@ -303,7 +303,7 @@ class Chapter(models.Model):
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='chapter_registrar')
     useful_links = models.ForeignKey(UsefulLinks, on_delete=models.CASCADE, blank=True, null=True)
     staff = models.ForeignKey(ChapterStaff, null=True, blank=True, on_delete=models.CASCADE)
-    chapter_pictures = models.ForeignKey(ChapterPicture, blank=True, null=True, on_delete=models.CASCADE, related_name='chapter_pictures')
+    chapter_pictures = models.ForeignKey(ChapterPicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
 
     def __str__(self):
         return self.name
@@ -614,22 +614,6 @@ class FinancialInstitutionModifier(IntEnum):
         return [(key.value, str(key)) for key in cls]
 
 
-class FinancialInstitutionPicture(models.Model):
-    picture = models.ImageField(upload_to='static_images')
-    img_Institution = models.ForeignKey('FinancialInstitution', blank=False, null=False, on_delete=models.CASCADE,
-                                      related_name='img_picture_FinancialInstitution')
-
-    def image_preview(self):
-        if self.picture:
-            return mark_safe(
-                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
-        else:
-            return '(No image)'
-
-    def __str__(self):
-        return self.picture.name
-
-
 class FinancialInstitution(models.Model):
     branch = models.ForeignKey(Chapter, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, unique=True)
@@ -641,8 +625,6 @@ class FinancialInstitution(models.Model):
                                    default=FinancialInstitutionModifier.average, blank=False, null=False)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    images = models.ForeignKey(FinancialInstitutionPicture, blank=True, null=True, on_delete=models.CASCADE,
-                                 related_name='institution_pictures')
 
     def __str__(self):
         return "{} [{:+}]".format(self.name, self.modifier)

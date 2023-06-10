@@ -19,8 +19,7 @@ from necrotopia.forms import RegisterUserForm, FinancialInvestmentAddForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
-    FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, \
-    FinancialInstitutionPicture, ChapterPicture
+    FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, ChapterPicture
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -48,6 +47,13 @@ def resend_registration_email(modeladmin, request, queryset):
         send_registration_email(request, user)
 
     messages.success(request, _translate('Registration email resent'))
+
+
+class ChapterPictureInLine(NestedTabularInline):
+    model = ChapterPicture
+    extra = 0
+    fields = ('picture', 'image_preview')
+    readonly_fields = ('image_preview',)
 
 
 class CustomUserAdmin(UserAdmin):
@@ -159,13 +165,6 @@ class DepartmentAdmin(NestedModelAdmin):
         return get_data
 
 
-class ChapterPictureInLine(NestedTabularInline):
-    model = ChapterPicture
-    extra = 0
-    fields = ('chapter_picture', 'image_preview')
-    readonly_fields = ('image_preview',)
-
-
 @admin.register(Chapter)
 class ChapterAdmin(NestedModelAdmin):
     list_display = ('name', 'active', 'registry_date', 'registrar')
@@ -176,7 +175,7 @@ class ChapterAdmin(NestedModelAdmin):
     fieldsets = (
         (None,
          {
-             'fields': ('name', 'active', 'chapter_pictures')
+             'fields': ('name', 'active', )
          }),
         ('Registrar', {
             'classes': ('collapse',),
@@ -366,9 +365,6 @@ class RulePictureInLine(NestedTabularInline):
     readonly_fields = ('image_preview',)
 
 
-
-
-
 class RuleAdminForm(forms.ModelForm):
     class Meta:
         model = Rule
@@ -423,13 +419,6 @@ class ItemPictureInLine(NestedTabularInline):
     readonly_fields = ('image_preview',)
 
 
-class FinancialInstitutionPictureInLine(NestedTabularInline):
-    model = FinancialInstitutionPicture
-    extra = 0
-    fields = ('picture', 'image_preview')
-    readonly_fields = ('image_preview',)
-
-
 class ModuleResourceInline(NestedTabularInline):
     extra = 0
     model = ModuleGradeResource
@@ -462,6 +451,9 @@ class ModuleGradeInline(NestedTabularInline):
         ModuleResourceInline,
         ModuleSubAssemblyInLine,
     ]
+
+
+
 
 
 @admin.register(ModuleAssembly)
@@ -554,7 +546,7 @@ class FinancialInstitutionAdmin(NestedModelAdmin):
     search_fields = ('branch', 'name',)
 
     inlines = [
-        FinancialInstitutionPictureInLine
+
     ]
 
     fieldsets = (
