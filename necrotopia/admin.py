@@ -20,7 +20,7 @@ from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gen
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
     FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, ChapterPicture, \
-    InstitutionPicture
+    InstitutionPicture, Advertisement, AdvertisementPicture
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -59,6 +59,13 @@ class ChapterPictureInLine(NestedTabularInline):
 
 class FinancialInstitutionPictureInLine(NestedTabularInline):
     model = InstitutionPicture
+    extra = 0
+    fields = ('picture', 'image_preview')
+    readonly_fields = ('image_preview',)
+
+
+class AdvertisementInLine(NestedTabularInline):
+    model = AdvertisementPicture
     extra = 0
     fields = ('picture', 'image_preview')
     readonly_fields = ('image_preview',)
@@ -648,3 +655,39 @@ class FinancialInvestmentAdmin(admin.ModelAdmin):
 
     def response_add(self, request, obj, post_url_continue=None):
         return FinancialInvestmentAdmin.die_roll_and_save(self, request, obj)
+
+
+@admin.register(Advertisement)
+class AdvertisementAdmin(NestedModelAdmin):
+    list_display = ('name', 'slug', 'is_active', 'published', 'start_date', 'end_date', 'registry_date', 'registrar')
+    list_display_links = list_display
+    ordering = ('name',)
+    search_fields = ('name',)
+
+    inlines = [
+        AdvertisementInLine
+    ]
+
+    fieldsets = (
+        (None,
+         {
+             'fields':
+                 (
+                     'name',
+                     'slug',
+                     'link',
+                     'published',
+                     'start_date',
+                     'end_date',
+                 )
+         }),
+        ('Registrar', {
+            'classes': ('collapse',),
+            'fields': ('registrar', 'registry_date',),
+        }),
+    )
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(AdvertisementAdmin, self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        return get_data
