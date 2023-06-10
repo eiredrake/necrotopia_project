@@ -10,6 +10,7 @@ from django.forms import TextInput, Textarea
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.timezone import make_aware
+from imagekit.admin import AdminThumbnail
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
 from rolldice import rolldice
 from taggit.forms import TagField, TextareaTagWidget
@@ -164,11 +165,12 @@ class ChapterAdmin(NestedModelAdmin):
     list_display_links = list_display
     ordering = ('name', )
     search_fields = ('name', )
+    admin_thumbnail = AdminThumbnail(image_field='chapter_logo')
 
     fieldsets = (
         (None,
          {
-             'fields': ('name', 'active', )
+             'fields': ('name', 'active', 'chapter_logo')
          }),
         ('Registrar', {
             'classes': ('collapse',),

@@ -34,7 +34,7 @@ AWS_LOCATION = Config.AWS_LOCATION
 
 
 # STATIC_URL = 'static/'
-STATIC_URL = '%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
+STATIC_URL = '%s/%s' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -46,7 +46,7 @@ TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, 'templates'),
 )
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '%s/%s' % (AWS_S3_ENDPOINT_URL, 'media/')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
