@@ -27,8 +27,8 @@ services:
       dockerfile: web_Dockerfile
     command: gunicorn necrotopia_project.wsgi:application --bind 0.0.0.0:8000
     volumes:
-      - static_volume:/necrotopia_web/static
-      - media_volume:/necrotopia_web/media
+      - static_volume:/usr/src/app/staticfiles
+      - media_volume:/usr/src/app/mediafiles
     ports:
       - 8000:8000
     expose:

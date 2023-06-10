@@ -27,27 +27,26 @@ AWS_ACCESS_KEY_ID = Config.AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY = Config.AWS_SECRET_ACCESS_KEY
 AWS_STORAGE_BUCKET_NAME = Config.AWS_STORAGE_BUCKET_NAME
 AWS_S3_ENDPOINT_URL = Config.AWS_S3_ENDPOINT_URL
+AWS_DEFAULT_ACL = 'public-read'
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 AWS_LOCATION = Config.AWS_LOCATION
-
-
-# STATIC_URL = 'static/'
 STATIC_URL = '%s/%s' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+PUBLIC_MEDIA_LOCATION = 'media'
+MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{PUBLIC_MEDIA_LOCATION}/'
+DEFAULT_FILE_STORAGE = 'necrotopia.storage_backends.PublicMediaStorage'
+PRIVATE_MEDIA_LOCATION = 'private'
+PRIVATE_FILE_STORAGE = 'necrotopia.storage_backends.PrivateMediaStorage'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATICFILES_DIR = (
-    os.path.join(BASE_DIR, 'static')
-)
+
+STATICFILES_DIRS = (BASE_DIR / 'static',)
+
 
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, 'templates'),
 )
-
-MEDIA_URL = '%s/%s' % (AWS_S3_ENDPOINT_URL, 'media/')
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Quick-start development settings - unsuitable for production
@@ -214,12 +213,8 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-print("STATIC_ROOT {static_folder}".format(static_folder=STATIC_ROOT))
 print("STATIC_URL {static_folder}".format(static_folder=STATIC_URL))
-
 print("MEDIA_URL {static_folder}".format(static_folder=MEDIA_URL))
-print("MEDIA_ROOT {static_folder}".format(static_folder=MEDIA_ROOT))
-
-print("STATICFILES_DIR {static_folder}".format(static_folder=STATICFILES_DIR))
+print("STATICFILES_DIR {static_folder}".format(static_folder=STATICFILES_DIRS))
 print("ALLOWED HOSTS {allowed_hosts}".format(allowed_hosts=ALLOWED_HOSTS))
 print("DEBUG {debug}".format(debug=Config.DEBUG))

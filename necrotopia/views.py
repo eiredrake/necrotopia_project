@@ -19,7 +19,7 @@ from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfile
 from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly
 from necrotopia.token import account_activation_token
 from necrotopia_project import settings
-from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIR
+from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIRS
 from django.contrib.auth import logout
 from django.contrib import messages
 from django.contrib.auth import login, authenticate
@@ -29,7 +29,7 @@ from django.utils.encoding import force_str
 @require_GET
 @cache_control(max_age=60 * 60 * 24, immutable=True, public=True)  # one day
 def favicon(request: HttpRequest) -> FileResponse:
-    file = (STATICFILES_DIR / "images" / "project_icon.png").open("rb")
+    file = (STATICFILES_DIRS / "images" / "project_icon.png").open("rb")
     return FileResponse(file)
 
 

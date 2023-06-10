@@ -163,3 +163,4 @@ cython_debug/
 /ca-certificate.crt
 
 .idea/
+/necrotopia/migrations/
