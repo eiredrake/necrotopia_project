@@ -5,7 +5,7 @@
 -- Dumped from database version 15.0 (Debian 15.0-1.pgdg110+1)
 -- Dumped by pg_dump version 15.2
 
--- Started on 2023-06-08 21:05:26
+-- Started on 2023-06-10 00:40:00
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1504,6 +1504,8 @@ INSERT INTO public.django_admin_log VALUES (82, '2023-06-08 20:04:40.16502+00', 
 INSERT INTO public.django_admin_log VALUES (83, '2023-06-08 20:04:45.13751+00', '1', 'Open Vein Excavation [+0]', 2, '[{"changed": {"fields": ["Published"]}}]', 32, 1);
 INSERT INTO public.django_admin_log VALUES (84, '2023-06-08 20:05:42.513009+00', '5', 'Last Hope Uni [+0]', 1, '[{"added": {}}, {"added": {"name": "financial institution picture", "object": "static_images/placeholder_184x245_ycXoDjl.png"}}]', 32, 1);
 INSERT INTO public.django_admin_log VALUES (85, '2023-06-08 20:05:49.131354+00', '2', 'Luckheed [+0]', 2, '[{"changed": {"fields": ["Modifier"]}}]', 32, 1);
+INSERT INTO public.django_admin_log VALUES (86, '2023-06-10 01:19:30.061562+00', '1', 'Dystopia Rising: Maryland', 2, '[{"changed": {"fields": ["Chapter logo"]}}]', 11, 1);
+INSERT INTO public.django_admin_log VALUES (87, '2023-06-10 01:42:12.325987+00', '1', 'Dystopia Rising: Maryland', 2, '[{"changed": {"fields": ["Chapter logo"]}}]', 11, 1);
 
 
 --
@@ -1593,6 +1595,8 @@ INSERT INTO public.django_migrations VALUES (34, 'necrotopia', '0008_rename_pict
 INSERT INTO public.django_migrations VALUES (35, 'necrotopia', '0009_financialinstitutionpicture_and_more', '2023-06-08 19:55:20.53266+00');
 INSERT INTO public.django_migrations VALUES (36, 'necrotopia', '0010_financialinstitution_published', '2023-06-08 19:57:02.339913+00');
 INSERT INTO public.django_migrations VALUES (37, 'necrotopia', '0011_alter_financialinstitution_published', '2023-06-08 19:57:14.824922+00');
+INSERT INTO public.django_migrations VALUES (38, 'necrotopia', '0012_chapter_chapter_logo_and_more', '2023-06-10 01:11:59.743002+00');
+INSERT INTO public.django_migrations VALUES (39, 'necrotopia', '0013_remove_chapter_chapter_logo', '2023-06-10 04:18:44.766338+00');
 
 
 --
@@ -2250,7 +2254,7 @@ SELECT pg_catalog.setval('public.auth_permission_id_seq', 144, true);
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: doadmin
 --
 
-SELECT pg_catalog.setval('public.django_admin_log_id_seq', 85, true);
+SELECT pg_catalog.setval('public.django_admin_log_id_seq', 87, true);
 
 
 --
@@ -2268,7 +2272,7 @@ SELECT pg_catalog.setval('public.django_content_type_id_seq', 36, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: doadmin
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 37, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 39, true);
 
 
 --
@@ -4179,7 +4183,7 @@ ALTER TABLE ONLY public.taggit_taggeditem
 REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 
 
--- Completed on 2023-06-08 21:05:27
+-- Completed on 2023-06-10 00:40:00
 
 --
 -- PostgreSQL database dump complete
