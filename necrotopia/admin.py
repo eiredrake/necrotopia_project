@@ -165,7 +165,6 @@ class ChapterAdmin(NestedModelAdmin):
     list_display_links = list_display
     ordering = ('name', )
     search_fields = ('name', )
-    admin_thumbnail = AdminThumbnail(image_field='chapter_logo' )
 
     fieldsets = (
         (None,

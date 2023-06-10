@@ -164,3 +164,7 @@ cython_debug/
 
 .idea/
 /necrotopia/migrations/
+/db/scripts/populate-genders.sql
+/db/scripts/populate-titles.sql
+/db/scripts/populate_staff_types.sql
+/db/scripts/populate_users.sql.sql
