@@ -296,7 +296,6 @@ class ChapterPicture(models.Model):
         return self.picture.name
 
 
-
 class Chapter(models.Model):
     name = models.CharField(max_length=255, unique=True, blank=False, null=False)
     active = models.BooleanField(blank=False, null=False, default=True)

@@ -5,7 +5,7 @@
 -- Dumped from database version 15.0 (Debian 15.0-1.pgdg110+1)
 -- Dumped by pg_dump version 15.2
 
--- Started on 2023-06-10 00:40:00
+-- Started on 2023-06-10 01:15:09
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -239,7 +239,8 @@ CREATE TABLE public.necrotopia_chapter (
     registry_date timestamp with time zone NOT NULL,
     registrar_id bigint NOT NULL,
     staff_id bigint,
-    useful_links_id bigint
+    useful_links_id bigint,
+    chapter_logo character varying(100)
 );
 
 
@@ -1411,6 +1412,10 @@ INSERT INTO public.auth_permission VALUES (141, 'Can add financial institution p
 INSERT INTO public.auth_permission VALUES (142, 'Can change financial institution picture', 36, 'change_financialinstitutionpicture');
 INSERT INTO public.auth_permission VALUES (143, 'Can delete financial institution picture', 36, 'delete_financialinstitutionpicture');
 INSERT INTO public.auth_permission VALUES (144, 'Can view financial institution picture', 36, 'view_financialinstitutionpicture');
+INSERT INTO public.auth_permission VALUES (145, 'Can add chapter picture', 37, 'add_chapterpicture');
+INSERT INTO public.auth_permission VALUES (146, 'Can change chapter picture', 37, 'change_chapterpicture');
+INSERT INTO public.auth_permission VALUES (147, 'Can delete chapter picture', 37, 'delete_chapterpicture');
+INSERT INTO public.auth_permission VALUES (148, 'Can view chapter picture', 37, 'view_chapterpicture');
 
 
 --
@@ -1550,6 +1555,7 @@ INSERT INTO public.django_content_type VALUES (33, 'necrotopia', 'loottable');
 INSERT INTO public.django_content_type VALUES (34, 'necrotopia', 'loottableitem');
 INSERT INTO public.django_content_type VALUES (35, 'necrotopia', 'financialinvestment');
 INSERT INTO public.django_content_type VALUES (36, 'necrotopia', 'financialinstitutionpicture');
+INSERT INTO public.django_content_type VALUES (37, 'necrotopia', 'chapterpicture');
 
 
 --
@@ -1597,6 +1603,8 @@ INSERT INTO public.django_migrations VALUES (36, 'necrotopia', '0010_financialin
 INSERT INTO public.django_migrations VALUES (37, 'necrotopia', '0011_alter_financialinstitution_published', '2023-06-08 19:57:14.824922+00');
 INSERT INTO public.django_migrations VALUES (38, 'necrotopia', '0012_chapter_chapter_logo_and_more', '2023-06-10 01:11:59.743002+00');
 INSERT INTO public.django_migrations VALUES (39, 'necrotopia', '0013_remove_chapter_chapter_logo', '2023-06-10 04:18:44.766338+00');
+INSERT INTO public.django_migrations VALUES (40, 'necrotopia', '0014_chapterpicture_chapter_chapter_pictures', '2023-06-10 04:57:54.568139+00');
+INSERT INTO public.django_migrations VALUES (41, 'necrotopia', '0015_remove_chapter_chapter_pictures_chapter_chapter_logo_and_more', '2023-06-10 05:14:04.37226+00');
 
 
 --
@@ -1616,7 +1624,7 @@ INSERT INTO public.django_session VALUES ('jmj8njr4h8xip8ljugb4b8kf8ck04bbj', '.
 -- Data for Name: necrotopia_chapter; Type: TABLE DATA; Schema: public; Owner: doadmin
 --
 
-INSERT INTO public.necrotopia_chapter VALUES (1, 'Dystopia Rising: Maryland', true, '2023-06-08 16:20:44+00', 1, NULL, NULL);
+INSERT INTO public.necrotopia_chapter VALUES (1, 'Dystopia Rising: Maryland', true, '2023-06-08 16:20:44+00', 1, NULL, NULL, NULL);
 
 
 --
@@ -2245,7 +2253,7 @@ SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 1, false);
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: doadmin
 --
 
-SELECT pg_catalog.setval('public.auth_permission_id_seq', 144, true);
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 148, true);
 
 
 --
@@ -2263,7 +2271,7 @@ SELECT pg_catalog.setval('public.django_admin_log_id_seq', 87, true);
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: doadmin
 --
 
-SELECT pg_catalog.setval('public.django_content_type_id_seq', 36, true);
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 37, true);
 
 
 --
@@ -2272,7 +2280,7 @@ SELECT pg_catalog.setval('public.django_content_type_id_seq', 36, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: doadmin
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 39, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 41, true);
 
 
 --
@@ -4183,7 +4191,7 @@ ALTER TABLE ONLY public.taggit_taggeditem
 REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 
 
--- Completed on 2023-06-10 00:40:00
+-- Completed on 2023-06-10 01:15:09
 
 --
 -- PostgreSQL database dump complete
