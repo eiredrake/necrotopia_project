@@ -37,7 +37,7 @@ def favicon(request: HttpRequest) -> FileResponse:
 def get_active_advertisements_for_user(user: UserProfile):
     now = timezone.now()
 
-    if user.display_game_advertisements:
+    if user.is_anonymous or user.display_game_advertisements:
         return Advertisement.objects.filter(published=True, start_date__lte=now, end_date__gte=now)
     else:
         return None
