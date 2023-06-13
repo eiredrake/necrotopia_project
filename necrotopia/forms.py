@@ -55,10 +55,11 @@ class UserProfileForm(forms.ModelForm):
     email_validator = EmailValidator()
     display_name = forms.CharField(label=_translate('Display Name'), widget=forms.TextInput, required=True,)
     full_name = forms.CharField(label=_translate("Full Name"), widget=forms.TextInput, required=False)
+    display_game_advertisements = forms.BooleanField(label=_translate('Display Game Advertisements'), required=False)
 
     class Meta:
         model = UserProfile
-        fields = ('display_name', 'full_name', 'title', 'gender', )
+        fields = ('display_name', 'full_name', 'title', 'gender', 'display_game_advertisements')
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()

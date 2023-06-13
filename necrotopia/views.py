@@ -1,5 +1,4 @@
 import re
-
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
@@ -16,7 +15,7 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
 from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfileForm
-from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly
+from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Advertisement
 from necrotopia.token import account_activation_token
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIRS
@@ -25,6 +24,8 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.utils.translation import gettext_lazy as _translate
 from django.utils.encoding import force_str
+from django.utils import timezone
+
 
 @require_GET
 @cache_control(max_age=60 * 60 * 24, immutable=True, public=True)  # one day
@@ -33,11 +34,24 @@ def favicon(request: HttpRequest) -> FileResponse:
     return FileResponse(file)
 
 
+def get_active_advertisements_for_user(user: UserProfile):
+    now = timezone.now()
+
+    if user.display_game_advertisements:
+        return Advertisement.objects.filter(published=True, start_date__lte=now, end_date__gte=now)
+    else:
+        return None
+
+
 # Create your views here.
 def home(request):
     template = 'necrotopia/home.html'
+
+    advertisements = get_active_advertisements_for_user(request.user)
+
     context = {
         "title": GLOBAL_SITE_NAME,
+        'advertisements': advertisements
     }
 
     return render(request, template, context=context)
@@ -174,6 +188,7 @@ def user_profile_change(request, template='necrotopia/user_profile_change.html')
             user.full_name = form.cleaned_data['full_name']
             user.title = form.cleaned_data['title']
             user.gender = form.cleaned_data['gender']
+            user.display_game_advertisements = form.cleaned_data['display_game_advertisements']
 
             user.save()
         else:
@@ -224,4 +239,5 @@ def rule_view(request, rule_id):
         'pictures': pictures,
     }
     return render(request, 'necrotopia/rule_view.html', context=context)
+
 

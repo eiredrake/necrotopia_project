@@ -1,3 +1,4 @@
+from datetime import timedelta
 from enum import IntEnum
 
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Permission, User, \
@@ -145,6 +146,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name='django_user_title', null=True, blank=True)
     pronouns = models.CharField(max_length=255, null=True, blank=True)
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=True)
+    display_game_advertisements = models.BooleanField(default=True, null=True, blank=True)
 
     is_staff = models.BooleanField(
         _translate("staff status"),
@@ -742,35 +744,21 @@ class InvestmentResult(IntEnum):
         return result
 
 
-class AdvertisementPicture(models.Model):
-    picture = models.ImageField(upload_to='advertisement_images')
-    advertisement_item = models.ForeignKey('Advertisement', blank=False, null=False, on_delete=models.CASCADE, related_name='picture_advertisement')
-
-    def image_preview(self):
-        if self.picture:
-            return mark_safe(
-                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
-        else:
-            return '(No image)'
-
-    def __str__(self):
-        return self.picture.name
-
-
 class Advertisement(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)
-    slug = models.CharField(max_length=255, blank=True, null=True)
-    link = models.URLField(max_length=500, blank=True, null=True)
+    name = models.CharField(max_length=60, default='', blank=True)
+    slug = models.TextField(max_length=100, default='', blank=True)
+    link = models.URLField(max_length=1000, default='', blank=True, null=True)
+    image = models.ImageField(upload_to='advertisements')
     published = models.BooleanField(default=False)
-    start_date = models.DateTimeField('start_date', default=timezone.now)
-    end_date = models.DateTimeField('end_date', default=timezone.now)
+    start_date = models.DateField(default=timezone.now)
+    end_date = models.DateField(default=timezone.now() + timedelta(days=30))
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    institution_pictures = models.ForeignKey(AdvertisementPicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
-
-    def is_active(self):
-        current_time = timezone.now()
-        return self.start_date >= current_time and current_time <= self.end_date
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = 'Advertisement'
+        verbose_name_plural = 'Advertisements'

@@ -20,7 +20,7 @@ from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gen
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
     FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, ChapterPicture, \
-    InstitutionPicture, Advertisement, AdvertisementPicture
+    InstitutionPicture, Advertisement
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -64,13 +64,6 @@ class FinancialInstitutionPictureInLine(NestedTabularInline):
     readonly_fields = ('image_preview',)
 
 
-class AdvertisementInLine(NestedTabularInline):
-    model = AdvertisementPicture
-    extra = 0
-    fields = ('picture', 'image_preview')
-    readonly_fields = ('image_preview',)
-
-
 class CustomUserAdmin(UserAdmin):
     add_form = RegisterUserForm
     change_form = RegisterUserForm
@@ -85,6 +78,9 @@ class CustomUserAdmin(UserAdmin):
         ('Personal Details', {
             'classes': ['collapse in'],
             'fields': ('title', 'full_name', 'display_name', 'pronouns', 'gender' )}),
+        ('Preferences', {
+            'classes': ['collapse in'],
+            'fields': ('display_game_advertisements', )}),
         ('Dates', {
             'classes': ['collapse in'],
             'fields': ('last_login', 'date_joined', 'birth_date', )}),
@@ -647,7 +643,6 @@ class FinancialInvestmentAdmin(admin.ModelAdmin):
             obj.roll_total = roll_total
             obj.save()
             self.message_user(request, "Rolled: {die_string}={roll_total} [{result_string}]".format(die_string=die_string, roll_total=roll_total, result_string=result_string))
-            #return HttpResponseRedirect(".")
         return super().response_change(request, obj)
 
     def response_change(self, request, obj):
@@ -658,36 +653,14 @@ class FinancialInvestmentAdmin(admin.ModelAdmin):
 
 
 @admin.register(Advertisement)
-class AdvertisementAdmin(NestedModelAdmin):
-    list_display = ('name', 'slug', 'is_active', 'published', 'start_date', 'end_date', 'registry_date', 'registrar')
-    list_display_links = list_display
-    ordering = ('name',)
-    search_fields = ('name',)
+class AdvertisementCarouselAdmin(admin.ModelAdmin):
+    list_display = ('name', 'published')
+    list_display_links = ('name', )
 
-    inlines = [
-        AdvertisementInLine
-    ]
-
-    fieldsets = (
-        (None,
-         {
-             'fields':
-                 (
-                     'name',
-                     'slug',
-                     'link',
-                     'published',
-                     'start_date',
-                     'end_date',
-                 )
-         }),
-        ('Registrar', {
-            'classes': ('collapse',),
-            'fields': ('registrar', 'registry_date',),
-        }),
-    )
+    class Meta:
+        model = Advertisement
 
     def get_changeform_initial_data(self, request):
-        get_data = super(AdvertisementAdmin, self).get_changeform_initial_data(request)
+        get_data = super(AdvertisementCarouselAdmin, self).get_changeform_initial_data(request)
         get_data['registrar'] = request.user.pk
         return get_data
