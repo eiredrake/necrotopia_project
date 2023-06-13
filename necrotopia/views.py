@@ -15,7 +15,7 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
 from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfileForm
-from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Photo
+from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Advertisement
 from necrotopia.token import account_activation_token
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIRS
@@ -34,14 +34,24 @@ def favicon(request: HttpRequest) -> FileResponse:
     return FileResponse(file)
 
 
+def get_active_advertisements_for_user(user: UserProfile):
+    now = timezone.now()
+
+    if user.display_game_advertisements:
+        return Advertisement.objects.filter(published=True, start_date__lte=now, end_date__gte=now)
+    else:
+        return None
+
+
 # Create your views here.
 def home(request):
     template = 'necrotopia/home.html'
-    photos = Photo.objects.all()
+
+    advertisements = get_active_advertisements_for_user(request.user)
 
     context = {
         "title": GLOBAL_SITE_NAME,
-        'photos': photos
+        'advertisements': advertisements
     }
 
     return render(request, template, context=context)

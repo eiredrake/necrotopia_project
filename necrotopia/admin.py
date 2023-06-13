@@ -20,7 +20,7 @@ from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gen
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
     FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, ChapterPicture, \
-    InstitutionPicture, Photo
+    InstitutionPicture, Advertisement
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -652,11 +652,15 @@ class FinancialInvestmentAdmin(admin.ModelAdmin):
         return FinancialInvestmentAdmin.die_roll_and_save(self, request, obj)
 
 
-@admin.register(Photo)
-class PhotoCarouselAdmin(admin.ModelAdmin):
-    list_display = ('name', 'timestamp', 'width', 'height')
-    exclude = ('width', 'height')
-    list_display_links = ('name', 'timestamp')
+@admin.register(Advertisement)
+class AdvertisementCarouselAdmin(admin.ModelAdmin):
+    list_display = ('name', 'published')
+    list_display_links = ('name', )
 
     class Meta:
-        model = Photo
+        model = Advertisement
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(AdvertisementCarouselAdmin, self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        return get_data

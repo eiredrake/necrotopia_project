@@ -1,3 +1,4 @@
+from datetime import timedelta
 from enum import IntEnum
 
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Permission, User, \
@@ -145,6 +146,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name='django_user_title', null=True, blank=True)
     pronouns = models.CharField(max_length=255, null=True, blank=True)
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=True)
+    display_game_advertisements = models.BooleanField(default=True, null=True, blank=True)
 
     is_staff = models.BooleanField(
         _translate("staff status"),
@@ -742,17 +744,21 @@ class InvestmentResult(IntEnum):
         return result
 
 
-class Photo(models.Model):
+class Advertisement(models.Model):
     name = models.CharField(max_length=60, default='', blank=True)
-    slug = models.TextField(max_length=200, default='', blank=True)
-    width = models.IntegerField(default=0)
-    height = models.IntegerField(default=0)
-    image = models.ImageField(width_field="width", height_field="height")
-    timestamp = models.DateTimeField(auto_now_add=True, auto_now=False)
+    slug = models.TextField(max_length=100, default='', blank=True)
+    link = models.URLField(max_length=1000, default='', blank=True, null=True)
+    image = models.ImageField(upload_to='advertisements')
+    published = models.BooleanField(default=False)
+    start_date = models.DateField(default=timezone.now)
+    end_date = models.DateField(default=timezone.now() + timedelta(days=30))
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ["timestamp"]
-        verbose_name = 'Photo'
+        ordering = ["name"]
+        verbose_name = 'Advertisement'
+        verbose_name_plural = 'Advertisements'

@@ -7,8 +7,8 @@
 {% block title %}Create an Account{% endblock %}
 
 {% block content %}
-    {% if photos %}
-        {% include 'necrotopia/image_carousel.html' with photos=photos %}
+    {% if advertisements|length > 0 %}
+        {% include 'necrotopia/image_carousel.html' with advertisements=advertisements %}
     {% endif %}
 
     <div class="container-fluid d-flex justify-content-center">
