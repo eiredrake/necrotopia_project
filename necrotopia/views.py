@@ -1,5 +1,4 @@
 import re
-
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
@@ -16,7 +15,7 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
 from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfileForm
-from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly
+from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Photo
 from necrotopia.token import account_activation_token
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIRS
@@ -25,6 +24,8 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.utils.translation import gettext_lazy as _translate
 from django.utils.encoding import force_str
+from django.utils import timezone
+
 
 @require_GET
 @cache_control(max_age=60 * 60 * 24, immutable=True, public=True)  # one day
@@ -36,8 +37,11 @@ def favicon(request: HttpRequest) -> FileResponse:
 # Create your views here.
 def home(request):
     template = 'necrotopia/home.html'
+    photos = Photo.objects.all()
+
     context = {
         "title": GLOBAL_SITE_NAME,
+        'photos': photos
     }
 
     return render(request, template, context=context)
@@ -224,4 +228,5 @@ def rule_view(request, rule_id):
         'pictures': pictures,
     }
     return render(request, 'necrotopia/rule_view.html', context=context)
+
 

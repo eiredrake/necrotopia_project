@@ -742,35 +742,17 @@ class InvestmentResult(IntEnum):
         return result
 
 
-class AdvertisementPicture(models.Model):
-    picture = models.ImageField(upload_to='advertisement_images')
-    advertisement_item = models.ForeignKey('Advertisement', blank=False, null=False, on_delete=models.CASCADE, related_name='picture_advertisement')
-
-    def image_preview(self):
-        if self.picture:
-            return mark_safe(
-                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
-        else:
-            return '(No image)'
-
-    def __str__(self):
-        return self.picture.name
-
-
-class Advertisement(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)
-    slug = models.CharField(max_length=255, blank=True, null=True)
-    link = models.URLField(max_length=500, blank=True, null=True)
-    published = models.BooleanField(default=False)
-    start_date = models.DateTimeField('start_date', default=timezone.now)
-    end_date = models.DateTimeField('end_date', default=timezone.now)
-    registry_date = models.DateTimeField('registry_date', default=timezone.now)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    institution_pictures = models.ForeignKey(AdvertisementPicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
-
-    def is_active(self):
-        current_time = timezone.now()
-        return self.start_date >= current_time and current_time <= self.end_date
+class Photo(models.Model):
+    name = models.CharField(max_length=60, default='', blank=True)
+    slug = models.TextField(max_length=200, default='', blank=True)
+    width = models.IntegerField(default=0)
+    height = models.IntegerField(default=0)
+    image = models.ImageField(width_field="width", height_field="height")
+    timestamp = models.DateTimeField(auto_now_add=True, auto_now=False)
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ["timestamp"]
+        verbose_name = 'Photo'

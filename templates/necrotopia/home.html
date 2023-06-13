@@ -7,8 +7,13 @@
 {% block title %}Create an Account{% endblock %}
 
 {% block content %}
+    {% if photos %}
+        {% include 'necrotopia/image_carousel.html' with photos=photos %}
+    {% endif %}
 
     <div class="container-fluid d-flex justify-content-center">
+
+
         {% if user.is_authenticated %}
             <H1>Welcome back {{ user.title }} {{ user.display_name }}. Everything is just where you left it.</H1>
         {% else %}
