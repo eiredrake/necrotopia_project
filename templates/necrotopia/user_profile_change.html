@@ -10,76 +10,70 @@
 {% block title %}{{ user.username }}{% endblock %}
 
 {% block content %}
-
-    <div id="id_user_profile_container" class="container-sm" style="width: 1000px">
-        <div id="id_main_internal_row" class="row">
-            <div id="id_main_left_col" class="col-3 bg-success text-center">
-                <div class="row">
-                    <h2>Greetings, {{ user.display_name }}!</h2>
-                </div>
-                <div class="row align-items-center">
-                    <a href="">
-                        <img src="{% static 'images/default_user.png' %}" class="rounded-circle mb-2"/>
-                        {% bs_icon 'pencil' color='black' extra_classes='align-bottom mb-2' %}
-                    </a>
-                </div>
-                <div class="row">
-                    {% if user.last_login %}
-                        Your last login was {{ user.last_login }}
-                    {% endif %}
-                </div>
-            </div>
-            <div id="id_main_right_col" class="col border border-dark b-1 shadow">
-
-                <div class="container-md">
-                    <nav>
-                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                            <a id="nav-personal-tab" class="nav-link active" data-bs-toggle="tab" href="#nav-personal"
-                               role="tab" aria-controls="nav-personal" aria-selected="true">Personal Details</a>
-                            <a id="nav-bubkiss-tab" class="nav-link" data-bs-toggle="tab" href="#nav-bubkiss" role="tab"
-                               aria-controls="nav-bubkiss" aria-selected="false">Preferences</a>
-                            <a id="nav-nada-tab" class="nav-link" data-bs-toggle="tab" href="#nav-nada" role="tab"
-                               aria-controls="nav-nada" aria-selected="false">Nada</a>
-                        </div>
-                    </nav>
-                    <div class="tab-content" id="nav-tabContent">
-                        <div id="nav-personal" class="tab-pane fade show active" role="tabpanel"
-                             aria-labelledby="nav-personal-tab">
-                            {% crispy form %}
-                        </div>
-                        <div id="nav-bubkiss" class="tab-pane fade" role="tabpanel" aria-labelledby="nav-bubkiss-tab">
-
-                        </div>
-                        <div id="nav-nada" class="tab-pane fade" role="tabpanel" aria-labelledby="nav-nada-tab">
-                            second tab
-                        </div>
+    <div id="id_user_profile_container" class="container-sm" style="width:1000px">
+        <form method="post" action="{% url 'user_profile_change' %}">
+            {% csrf_token %}
+            <div id="id_main_internal_row" class="row">
+                <div id="id_main_left_col" class="col-3 bg-success text-center">
+                    <div class="row">
+                        <h2>Greetings, {{ user.display_name }}!</h2>
                     </div>
-                    <div class="row align-items-middle align-items-center">
-                        <div class="col-10">
-
-                        </div>
-                        <div class="col-2 d-flex float-right pb-2">
-                            <button id="id_save_button" form="id-user_profile_form" class="btn btn-success">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
-                                     class="bi bi-check2-circle" viewBox="0 0 16 16">
-                                    <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/>
-                                    <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/>
-                                </svg>
-                            </button>
-                            <a href="{% url 'home' %}" type="submit" class="btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
-                                     class="bi bi-x-circle" viewBox="0 0 16 16">
-                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                                </svg>
-                            </a>
-                        </div>
+                    <div class="row align-items-center">
+                        <a href="">
+                            <img src="{% static 'images/default_user.png' %}" class="rounded-circle mb-2"/>
+                            {% bs_icon 'pencil' color='black' extra_classes='align-bottom mb-2' %}
+                        </a>
+                    </div>
+                    <div class="row">
+                        {% if user.last_login %}
+                            Your last login was {{ user.last_login }}
+                        {% endif %}
                     </div>
                 </div>
+                <div id="id_main_right_col" class="col border border-dark b-1 shadow">
+                    <div class="container-md">
+                        <nav>
+                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                <a id="nav-personal-tab" class="nav-link active" data-bs-toggle="tab"
+                                   href="#nav-personal"
+                                   role="tab" aria-controls="nav-personal" aria-selected="true">Personal Details</a>
+                                <a id="nav-nada-tab" class="nav-link" data-bs-toggle="tab" href="#nav-nada" role="tab"
+                                   aria-controls="nav-nada" aria-selected="false">Preferences</a>
+                            </div>
+                        </nav>
+                        <div class="tab-content" id="nav-tabContent">
+                            <div id="nav-personal" class="tab-pane fade show active" role="tabpanel"
+                                 aria-labelledby="nav-personal-tab">
+                                {{ form.display_name|as_crispy_field }}
+                                {{ form.full_name|as_crispy_field }}
+                                {{ form.title|as_crispy_field }}
+                                {{ form.gender|as_crispy_field }}
+                            </div>
+                            <div id="nav-nada" class="tab-pane fade" role="tabpanel" aria-labelledby="nav-nada-tab">
+                                {{ form.display_game_advertisements|as_crispy_field }}
+                            </div>
+                        </div>
 
-
+                    </div>
+                    <div id="id_form_buttons" class="col-2 d-flex float-right pb-2">
+                        <button class="btn btn-success">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                 fill="currentColor"
+                                 class="bi bi-check2-circle" viewBox="0 0 16 16">
+                                <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/>
+                                <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/>
+                            </svg>
+                        </button>
+                        <a href="{% url 'home' %}" type="submit" class="btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                                 class="bi bi-x-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
-
 {% endblock %}
