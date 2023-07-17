@@ -566,6 +566,12 @@ class ModuleAssembly(models.Model):
 
         return result
 
+    def has_image(self):
+        return ItemPicture.objects.filter(imd_assembly_item__line_id__exact=self.pk).first() is not None
+
+    def has_pdf(self):
+        return ItemPdf.objects.filter(pdf_assembly_item_id__exact=self.pk).first() is not None
+
     def get_item_type(self):
         return ComponentType(self.item_type).name
 
@@ -762,3 +768,5 @@ class Advertisement(models.Model):
         ordering = ["name"]
         verbose_name = 'Advertisement'
         verbose_name_plural = 'Advertisements'
+
+
