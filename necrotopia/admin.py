@@ -1,3 +1,4 @@
+import io
 from datetime import datetime
 
 import django.forms.models
@@ -7,13 +8,14 @@ from django.contrib.admin.helpers import ActionForm
 from django.contrib.auth.admin import UserAdmin
 from django.db import models
 from django.forms import TextInput, Textarea
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.utils.timezone import make_aware
 from imagekit.admin import AdminThumbnail
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
 from rolldice import rolldice
 from taggit.forms import TagField, TextareaTagWidget
+from pypdf import PdfReader, PdfWriter, PdfMerger
 
 from necrotopia.forms import RegisterUserForm, FinancialInvestmentAddForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
@@ -32,6 +34,7 @@ from taggit.forms import TagField
 from taggit.managers import TaggableManager
 from taggit.models import Tag
 from functools import partial as curry
+
 
 
 def deactivate_user(modeladmin, request, queryset):
@@ -70,20 +73,21 @@ class CustomUserAdmin(UserAdmin):
 
     model = UserProfile
 
-    list_display = ('email', 'display_name', 'full_name', 'is_active', 'is_staff', 'is_superuser', 'last_login', 'pronouns', 'gender')
+    list_display = (
+    'email', 'display_name', 'full_name', 'is_active', 'is_staff', 'is_superuser', 'last_login', 'pronouns', 'gender')
     list_filter = ('is_active', 'is_staff', 'is_superuser')
     filter_horizontal = ()
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal Details', {
             'classes': ['collapse in'],
-            'fields': ('title', 'full_name', 'display_name', 'pronouns', 'gender' )}),
+            'fields': ('title', 'full_name', 'display_name', 'pronouns', 'gender')}),
         ('Preferences', {
             'classes': ['collapse in'],
-            'fields': ('display_game_advertisements', )}),
+            'fields': ('display_game_advertisements',)}),
         ('Dates', {
             'classes': ['collapse in'],
-            'fields': ('last_login', 'date_joined', 'birth_date', )}),
+            'fields': ('last_login', 'date_joined', 'birth_date',)}),
         ('Permissions', {
             'classes': ['collapse in'],
             'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
@@ -121,8 +125,8 @@ admin.site.unregister(DjangoGroup)
 class ChapterStaffTypeAdmin(BaseGroupAdmin):
     list_display = ('name', 'description', 'registry_date', 'registrar')
     list_display_links = list_display
-    ordering = ('name', )
-    search_fields = ('name', )
+    ordering = ('name',)
+    search_fields = ('name',)
     filter_horizontal = ()
 
 
@@ -133,32 +137,32 @@ class GroupAdmin(BaseGroupAdmin):
 
 @admin.register(Title)
 class TitleAdmin(NestedModelAdmin):
-    list_display = ('descriptor', )
+    list_display = ('descriptor',)
     list_display_links = list_display
-    ordering = ('descriptor', )
-    search_fields = ('descriptor', )
+    ordering = ('descriptor',)
+    search_fields = ('descriptor',)
 
 
 @admin.register(Gender)
 class GenderAdmin(NestedModelAdmin):
-    list_display = ('descriptor', )
+    list_display = ('descriptor',)
     list_display_links = list_display
-    ordering = ('descriptor', )
-    search_fields = ('descriptor', )
+    ordering = ('descriptor',)
+    search_fields = ('descriptor',)
 
 
 class UsefulLinksInline(NestedTabularInline):
     extra = 0
     model = UsefulLinks
     fields = ('name', 'published', 'url')
-    classes = ('collapse', )
+    classes = ('collapse',)
 
 
 class ChapterStaffInline(NestedTabularInline):
     extra = 0
     model = ChapterStaff
     fields = ('user_profile', 'department', 'type')
-    classes = ('collapse', )
+    classes = ('collapse',)
 
     verbose_name = "Chapter Staff Member"
     verbose_name_plural = "Chapter Staff"
@@ -168,8 +172,8 @@ class ChapterStaffInline(NestedTabularInline):
 class DepartmentAdmin(NestedModelAdmin):
     list_display = ('name', 'description', 'registry_date', 'registrar')
     list_display_links = list_display
-    ordering = ('name', )
-    search_fields = ('name', )
+    ordering = ('name',)
+    search_fields = ('name',)
 
     def get_changeform_initial_data(self, request):
         get_data = {'registrar': request.user.pk}
@@ -180,8 +184,8 @@ class DepartmentAdmin(NestedModelAdmin):
 class ChapterAdmin(NestedModelAdmin):
     list_display = ('name', 'active', 'registry_date', 'registrar')
     list_display_links = list_display
-    ordering = ('name', )
-    search_fields = ('name', )
+    ordering = ('name',)
+    search_fields = ('name',)
 
     fieldsets = (
         (None,
@@ -210,8 +214,8 @@ class ChapterAdmin(NestedModelAdmin):
 class UsefulLinksAdmin(NestedModelAdmin):
     list_display = ('name', 'chapter_link', 'url', 'published', 'registrar', 'registry_date')
     list_display_links = list_display
-    ordering = ('name', )
-    search_fields = ('name', )
+    ordering = ('name',)
+    search_fields = ('name',)
 
 
 class ResourceItemAdminForm(forms.ModelForm):
@@ -384,6 +388,7 @@ class RuleAdminForm(forms.ModelForm):
             'text': forms.Textarea(attrs={'rows': 10, 'cols': '100'})
         }
 
+
 @admin.register(Rule)
 class RuleAdmin(NestedModelAdmin):
     tag_display = ['tag_list']
@@ -420,7 +425,7 @@ class RuleAdmin(NestedModelAdmin):
 class ItemPdfInLine(NestedTabularInline):
     model = ItemPdf
     extra = 0
-    fields = ('pdf', )
+    fields = ('pdf',)
 
 
 class ItemPictureInLine(NestedTabularInline):
@@ -467,7 +472,9 @@ class ModuleGradeInline(NestedTabularInline):
 @admin.register(ModuleAssembly)
 class ModuleAssemblyAdmin(NestedModelAdmin):
     tag_display = ['tag_list']
-    list_display = ('name', 'item_type', 'published', 'checked', 'last_update_date', 'expiration', 'tag_list')
+    actions = ['print_pdfs']
+    list_display = (
+    'name', 'item_type', 'checked', 'published', 'has_image', 'has_pdf', 'last_update_date', 'expiration', 'tag_list')
     list_display_links = list_display
     ordering = ('name',)
     search_fields = ('name', 'published', 'checked', 'tags__name',)
@@ -494,8 +501,8 @@ class ModuleAssemblyAdmin(NestedModelAdmin):
                  )
          }),
         ('Crafting and Usage', {
-                'classes': ('collapse',),
-                'fields': ('crafting_tree', 'crafting_area', 'usage_tree'),
+            'classes': ('collapse',),
+            'fields': ('crafting_tree', 'crafting_area', 'usage_tree'),
         }),
         ('Details', {
             'classes': ('collapse',),
@@ -506,6 +513,44 @@ class ModuleAssemblyAdmin(NestedModelAdmin):
             'fields': ('registrar', 'registration_date', 'last_update_date'),
         }),
     )
+
+    @admin.action(description="Print the PDFs of all selected items")
+    def print_pdfs(self, request, queryset):
+        if 'proceed' in request.POST:
+            output_file = PdfWriter()
+            try:
+                for item in queryset:
+                    for module_pdf in ItemPdf.objects.filter(pdf_assembly_item_id=item.pk):
+                        reader = PdfReader(module_pdf.pdf.open("rb"))
+                        number_of_pages = len(reader.pages)
+                        for page_number in range(number_of_pages):
+                            page = reader.pages[page_number]
+                            output_file.add_page(page)
+
+                with io.BytesIO() as pdf:
+                    output_file.write(pdf)
+                    response = HttpResponse(pdf.getbuffer(), content_type='application/pdf')
+                    response['Content-Disposition'] = 'filename=%s' % 'output.pdf'
+                    return response
+            finally:
+                output_file.close()
+
+        elif 'cancel' in request.POST:
+            self.message_user(request, level=messages.ERROR, message="Action cancelled")
+            return HttpResponseRedirect(request.get_full_path())
+        else:
+            return render(request, 'necrotopia/admin_print_pdfs.html', context={
+                "title": 'Confirm Action',
+                "items": queryset,
+            })
+
+    @admin.display(description='Has image', boolean=True)
+    def has_image(self, obj: ModuleAssembly) -> bool:
+        return obj.has_image()
+
+    @admin.display(description='Has PDF', boolean=True)
+    def has_pdf(self, obj: ModuleAssembly) -> bool:
+        return obj.has_pdf()
 
     def save_model(self, request, obj, form, change):
         obj.last_update_date = make_aware(datetime.now())
@@ -585,7 +630,9 @@ class FinancialInstitutionAdmin(NestedModelAdmin):
 
 @admin.register(FinancialInvestment)
 class FinancialInvestmentAdmin(admin.ModelAdmin):
-    list_display = ('character', 'investment_date', 'institution', 'amount_invested', 'die_roll', 'modifier', 'roll_total', 'end_result', )
+    list_display = (
+    'character', 'investment_date', 'institution', 'amount_invested', 'die_roll', 'modifier', 'roll_total',
+    'end_result',)
     list_display_links = list_display
     ordering = ('-investment_date', 'institution', 'character', 'amount_invested')
     # search_fields = ('institution', 'character',)
@@ -598,7 +645,7 @@ class FinancialInvestmentAdmin(admin.ModelAdmin):
     fieldsets = (
         (None,
          {
-             'fields': ('character', 'institution', 'investment_date', )
+             'fields': ('character', 'institution', 'investment_date',)
          }),
         ('Results', {
             'classes': ('expand',),
@@ -642,7 +689,10 @@ class FinancialInvestmentAdmin(admin.ModelAdmin):
             obj.modifier = institution.modifier
             obj.roll_total = roll_total
             obj.save()
-            self.message_user(request, "Rolled: {die_string}={roll_total} [{result_string}]".format(die_string=die_string, roll_total=roll_total, result_string=result_string))
+            self.message_user(request,
+                              "Rolled: {die_string}={roll_total} [{result_string}]".format(die_string=die_string,
+                                                                                           roll_total=roll_total,
+                                                                                           result_string=result_string))
         return super().response_change(request, obj)
 
     def response_change(self, request, obj):
@@ -655,7 +705,7 @@ class FinancialInvestmentAdmin(admin.ModelAdmin):
 @admin.register(Advertisement)
 class AdvertisementCarouselAdmin(admin.ModelAdmin):
     list_display = ('name', 'published')
-    list_display_links = ('name', )
+    list_display_links = ('name',)
 
     class Meta:
         model = Advertisement
