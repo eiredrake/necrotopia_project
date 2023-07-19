@@ -1,5 +1,6 @@
 from datetime import timedelta
 from enum import IntEnum
+from typing import TypedDict
 
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Permission, User, \
     PermissionsMixin

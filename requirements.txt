@@ -19,6 +19,7 @@ django-imagekit==4.1.0
 django-nested-admin==4.0.2
 django-password-validators==1.7.1
 django-storages==1.13.2
+django-tables2==2.6.0
 django-taggit==4.0.0
 django-utils-six==2.0
 dnspython==2.3.0
@@ -32,10 +33,12 @@ platformdirs==3.5.1
 psycopg2-binary==2.9.6
 py-rolldice==0.4.0
 Pygments==2.15.1
+pypdf==3.12.1
 python-dateutil==2.8.2
 python-dotenv==1.0.0
 python-monkey-business==1.0.0
 pytz==2023.3
+PyYAML==6.0
 regex==2023.5.5
 requests==2.31.0
 rich==12.6.0
@@ -43,6 +46,7 @@ s3transfer==0.6.1
 six==1.16.0
 soupsieve==2.4.1
 sqlparse==0.4.4
+types-PyYAML==6.0.12.10
 tzdata==2023.3
+urllib3==1.26.16
 virtualenv==20.23.0
-pypdf~=3.12.1

@@ -1,0 +1,38 @@
+{% extends "necrotopia/base.html" %}
+{% load static %}
+{% get_media_prefix %}
+{% load imagekit %}
+{% block title %}{{ resource.name }}{% endblock %}
+
+{% block content %}
+    <div class="container-fluid no-padding">
+        <H1>Resource</H1>
+            <div class="card">
+            <h1 class="mercantile-section-header-dark text-dark"><i class="fa-solid fa-cannabis mercantile-section-icon"></i>{{ resource.name }}</h1>
+                <div class="mercantile-table-block-light">
+                    <div class="col-lg-6 col-sm-6">
+                    <div class="col-lg">
+                        <table class="table table-striped table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Expiration</th>
+                                    <th>Tags</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <td>{{ resource.name }}</td>
+                                <td>{{ resource.get_expiration }}</td>
+                                <td>
+                                    <em>
+                                        {{ resource.get_tags_string }}
+                                    </em>
+                                </td>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

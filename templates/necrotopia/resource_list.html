@@ -5,27 +5,24 @@
 	<div class="no_border no_background" style="width: 100%;">
         <div class="card-header necrotopia-list-titlebar_dark">
             <h4 class="necrotopia-item-titlebar_dark">
-                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Game Blueprint List ({{ all_blueprints_found|length }})
+                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Game Resource List ({{ all_resources_found|length }})
             </h4>
         </div>
         <div class="col-lg">
 			<table class="table table-striped table-hover no_border">
 				<thead>
                     <tr>
-                        <th>Item</th>
-                        <td>Item Type</td>
+                        <th>Resource</th>
                         <td>Expiration</td>
                         <td>Tags</td>
                     </tr>
 				</thead>
 				<tbody>
-                    {% for blueprint in all_blueprints_found %}
+                    {% for resource in all_resources_found %}
                         <tr>
-                            <td><a class="btn-link necrotopia_btn_link_dark" href="{% url "blueprint_view" blueprint_id=blueprint.line_id %}">{{ blueprint.name }}</a></td>
-                            <td>{{ blueprint.name }}</td>
-                            <td>{{ blueprint.get_item_type }}</td>
-                            <td>{{ blueprint.get_expiration }}</td>
-                            <td>{{ blueprint.get_tags_string }}</td>
+                            <td><a class="btn-link necrotopia_btn_link_dark " href="{% url "resource_view" resource_id=resource.id %}">{{ resource.name }}</a></td>
+                            <td>{{ resource.get_expiration }}</td>
+                            <td>{{ resource.get_tags_string }}</td>
                         </tr>
                     {% endfor %}
 				</tbody>
