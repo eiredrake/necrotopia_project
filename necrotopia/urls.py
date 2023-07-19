@@ -14,5 +14,6 @@ urlpatterns = [
     path('search_results/', views.search_results, name='search_results'),
     path('rule_view/<int:rule_id>', views.rule_view, name='rule_view'),
     path('rules_list/', views.rules_list, name='rules_list'),
+    path('blueprint_view/<int:blueprint_id>', views.blueprint_view, name='blueprint_view'),
 ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -15,7 +15,7 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
 from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfileForm
-from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Advertisement
+from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Advertisement, ItemPicture, ModuleGrade
 from necrotopia.token import account_activation_token
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIRS
@@ -173,7 +173,8 @@ class ActivateAccount(View):
             messages.success(request, _translate('Your account has been confirmed.'))
             return redirect('home')
         else:
-            messages.warning(request, _translate('The confirmation link was invalid, possibly because it has already been used.'))
+            messages.warning(request, _translate(
+                'The confirmation link was invalid, possibly because it has already been used.'))
             return redirect('home')
 
 
@@ -220,12 +221,13 @@ def search_results(request):
         context['all_rules_found'] = all_rules_found
         context['all_blueprints_found'] = all_blueprints_found
         context['search_terms'] = search_terms_list
+        context['title'] = GLOBAL_SITE_NAME
 
     return render(request, 'necrotopia/search_results.html', context)
 
 
 def rules_list(request):
-    return render(request, 'necrotopia/rules_list.html', context={"rules_found":  Rule.objects.all()})
+    return render(request, 'necrotopia/rules_list.html', context={"rules_found": Rule.objects.all()})
 
 
 def rule_view(request, rule_id):
@@ -241,3 +243,25 @@ def rule_view(request, rule_id):
     return render(request, 'necrotopia/rule_view.html', context=context)
 
 
+def blueprint_view(request, blueprint_id):
+    try:
+        blueprint = ModuleAssembly.objects.get(pk=blueprint_id)
+        # pictures = ItemPicture.objects.filter(assembly_item_id=blueprint_id)
+        module_grades = ModuleGrade.objects.filter(module_assembly=blueprint)
+        parts_list = blueprint.flatten()
+
+        tags = blueprint.get_tags_string()
+    except ModuleAssembly.DoesNotExist:
+        raise Http404("That blueprint does not exist")
+
+    return render(request, 'necrotopia/blueprint_view.html',
+                  context={
+                      'blueprint': blueprint,
+                      'item_type': blueprint.get_item_type_display,
+                      'expiration': blueprint.get_expiration(),
+                      # 'pictures': pictures,
+                      'module_grades': module_grades,
+                      'tags': tags,
+                      'parts_list': parts_list,
+                      'title': GLOBAL_SITE_NAME,
+                  })

@@ -21,7 +21,7 @@
 				<tbody>
                     {% for blueprint in all_blueprints_found %}
                         <tr>
-{#                            <td><a class="btn-link necrotopia_btn_link_dark" href="{% url "blueprint_view" blueprint_id=blueprint.line_id %}">{{ blueprint.name }}</a></td>#}
+                            <td><a class="btn-link necrotopia_btn_link_dark" href="{% url "blueprint_view" blueprint_id=blueprint.line_id %}">{{ blueprint.name }}</a></td>
                             <td>{{ blueprint.name }}</td>
                             <td>{{ blueprint.get_item_type }}</td>
                             <td>{{ blueprint.get_expiration }}</td>
