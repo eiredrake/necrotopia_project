@@ -2,6 +2,7 @@ import re
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from django.db.models import QuerySet
 from django.http import FileResponse, HttpRequest, HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.shortcuts import render, redirect
@@ -15,7 +16,8 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
 from Config import Config
 from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfileForm
-from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Advertisement, ItemPicture, ModuleGrade
+from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Advertisement, ItemPicture, ModuleGrade, \
+    SkillItem, SkillRatings, ResourceItem
 from necrotopia.token import account_activation_token
 from necrotopia_project import settings
 from necrotopia_project.settings import GLOBAL_SITE_NAME, STATICFILES_DIRS
@@ -218,8 +220,19 @@ def search_results(request):
         rules_by_name = Rule.objects.filter(name__icontains=search_terms)
         rules_by_tag = Rule.objects.filter(tags__name__in=search_terms_list)
         all_rules_found = rules_by_name.union(rules_by_tag).order_by('name')
+
+        skills_by_name = SkillItem.objects.filter(name__icontains=search_terms)
+        # skills_by_tag = SkillItem.objects.filter(tags__name_in=search_terms_list)
+        all_skills_found = skills_by_name # skills_by_name.union(skills_by_tag).order_by('name')
+
+        resource_by_name = ResourceItem.objects.filter(name__icontains=search_terms)
+        resource_by_tag = ResourceItem.objects.filter(tags__name__in=search_terms_list)
+        all_resources_found = resource_by_name.union(resource_by_tag).order_by('name')
+
         context['all_rules_found'] = all_rules_found
         context['all_blueprints_found'] = all_blueprints_found
+        context['all_skills_found'] = all_skills_found
+        context['all_resources_found'] = all_resources_found
         context['search_terms'] = search_terms_list
         context['title'] = GLOBAL_SITE_NAME
 
@@ -239,6 +252,7 @@ def rule_view(request, rule_id):
     context = {
         'rule': rule,
         'pictures': pictures,
+        'title': GLOBAL_SITE_NAME,
     }
     return render(request, 'necrotopia/rule_view.html', context=context)
 
@@ -265,3 +279,37 @@ def blueprint_view(request, blueprint_id):
                       'parts_list': parts_list,
                       'title': GLOBAL_SITE_NAME,
                   })
+
+
+def skill_list(request):
+    return render(request, 'necrotopia/skill_list.html', context={'skills_found': SkillItem.objects.all()})
+
+
+def skill_view(request, skill_id):
+    try:
+        skill = SkillItem.objects.get(pk=skill_id)
+        skill_ratings = SkillRatings.objects.filter(skill_id=skill.id)
+    except SkillItem.DoesNotExist:
+        raise Http404("That skill does not exist")
+    context = {
+        'skill': skill,
+        'skill_ratings': skill_ratings,
+        'title': GLOBAL_SITE_NAME
+    }
+
+    return render(request, 'necrotopia/skill_view.html', context=context)
+
+
+def resources_list(request, resources):
+    return render(request, 'necrotopia/resource_list.html', context=resources)
+
+
+def resource_view(request, resource_id):
+    try:
+        resource = ResourceItem.objects.get(pk=resource_id)
+    except Rule.DoesNotExist:
+        raise Http404("That resource does not exist")
+    context = {
+        'resource': resource,
+    }
+    return render(request, 'necrotopia/resource_view.html', context=context)

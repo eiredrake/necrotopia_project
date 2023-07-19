@@ -8,12 +8,16 @@
     <div class="card">
         <h1 class="mercantile-section-header-dark text-dark"><i class="fa-solid fa-gavel mercantile-section-icon"></i>Rule: {{ rule.name }}</h1>
         <div class="mercantile-table-block-light">
-            <div>
-                <b>Tags: </b><em>{{ rule.get_tags_string }}</em>
-            </div>
-            <div class="col-lg-6 col-sm-6">
+            {% if rule.get_tags_string|length > 0 %}
+                <div>
+                    <b>Tags: </b><em>{{ rule.get_tags_string }}</em>
+                </div>
+            {% endif %}
+
+            <div class="col-lg-6 col-sm-6 shadow-sm p-3 mb-5 bg-body rounded">
                 {{ rule.text }}
             </div>
+
             <div class="col-lg-6 col-sm-6 mercantile-table-block-light">
                 {% for picture in pictures %}
                     <a href="{{ picture.picture.url }}"><img class="rounded" src="{{ picture.picture.url }}" alt="picture.picture"/></a>

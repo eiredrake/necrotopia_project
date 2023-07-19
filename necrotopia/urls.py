@@ -15,5 +15,9 @@ urlpatterns = [
     path('rule_view/<int:rule_id>', views.rule_view, name='rule_view'),
     path('rules_list/', views.rules_list, name='rules_list'),
     path('blueprint_view/<int:blueprint_id>', views.blueprint_view, name='blueprint_view'),
+    path('skill_list', views.skill_list, name='list_all_skills'),
+    path('skill_view/<int:skill_id>', views.skill_view, name='skill_view'),
+    path('resource_view/<int:resource_id>', views.resource_view, name='resource_view'),
+    path('resources_list', views.resources_list, name='resources_list'),
 ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

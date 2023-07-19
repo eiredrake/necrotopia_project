@@ -8,7 +8,7 @@
 {% block content %}
     <div class="container-fluid no-padding">
         {% if search_terms|length > 0 %}
-            {% if all_rules_found|length > 0 or all_blueprints_found|length > 0 %}
+            {% if all_rules_found|length > 0 or all_blueprints_found|length > 0 or all_skills_found|length > 0 or all_resources_found %}
                 {% if all_rules_found|length > 0 %}
                     {% block rules %}
                         {% include 'necrotopia/rules_list.html' with all_rules_found=all_rules_found %}
@@ -18,6 +18,16 @@
                     {% block blueprints %}
                         {% include 'necrotopia/blueprint_list.html' with all_blueprints_found=all_blueprints_found %}
                     {% endblock blueprints %}
+                {% endif %}
+                {% if all_skills_found|length > 0 %}
+                    {% block skills %}
+                        {% include 'necrotopia/skill_list.html' with all_skills_found=all_skills_found %}
+                    {% endblock skills %}
+                {% endif %}
+                {% if all_resources_found|length > 0 %}
+                    {% block resources %}
+                        {% include 'necrotopia/resource_list.html' with all_resources_found=all_resources_found %}
+                    {% endblock resources %}
                 {% endif %}
             {% else %}
                 <h1>We did not find anything matching your search terms</h1>

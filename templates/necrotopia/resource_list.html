@@ -1,0 +1,33 @@
+{% load static %}
+{% load imagekit %}
+{% block content %}
+<div class="container-fluid no-padding no_border">
+	<div class="no_border no_background" style="width: 100%;">
+        <div class="card-header necrotopia-list-titlebar_dark">
+            <h4 class="necrotopia-item-titlebar_dark">
+                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Game Resource List ({{ all_resources_found|length }})
+            </h4>
+        </div>
+        <div class="col-lg">
+			<table class="table table-striped table-hover no_border">
+				<thead>
+                    <tr>
+                        <th>Resource</th>
+                        <td>Expiration</td>
+                        <td>Tags</td>
+                    </tr>
+				</thead>
+				<tbody>
+                    {% for resource in all_resources_found %}
+                        <tr>
+                            <td><a class="btn-link necrotopia_btn_link_dark " href="{% url "resource_view" resource_id=resource.id %}">{{ resource.name }}</a></td>
+                            <td>{{ resource.get_expiration }}</td>
+                            <td>{{ resource.get_tags_string }}</td>
+                        </tr>
+                    {% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock content %}
