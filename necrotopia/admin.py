@@ -704,11 +704,15 @@ class FinancialInvestmentAdmin(admin.ModelAdmin):
 
 @admin.register(Advertisement)
 class AdvertisementCarouselAdmin(admin.ModelAdmin):
-    list_display = ('name', 'published')
+    list_display = ('name', 'published', 'is_active', 'start_date', 'end_date')
     list_display_links = ('name',)
 
     class Meta:
         model = Advertisement
+
+    @admin.display(description='Currently Active', boolean=True)
+    def is_active(self, obj: Advertisement) -> bool:
+        return obj.is_active()
 
     def get_changeform_initial_data(self, request):
         get_data = super(AdvertisementCarouselAdmin, self).get_changeform_initial_data(request)

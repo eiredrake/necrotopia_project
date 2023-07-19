@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import EmailValidator, MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.backends.postgresql.psycopg_any import DateTimeTZRange
 from django.db.models import CheckConstraint, Q
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -286,7 +287,8 @@ class ChapterStaff(models.Model):
 
 class ChapterPicture(models.Model):
     picture = models.ImageField(upload_to='chapter_images')
-    chapter_item = models.ForeignKey('Chapter', blank=False, null=False, on_delete=models.CASCADE, related_name='picture_chapter')
+    chapter_item = models.ForeignKey('Chapter', blank=False, null=False, on_delete=models.CASCADE,
+                                     related_name='picture_chapter')
 
     def image_preview(self):
         if self.picture:
@@ -306,7 +308,8 @@ class Chapter(models.Model):
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='chapter_registrar')
     useful_links = models.ForeignKey(UsefulLinks, on_delete=models.CASCADE, blank=True, null=True)
     staff = models.ForeignKey(ChapterStaff, null=True, blank=True, on_delete=models.CASCADE)
-    chapter_pictures = models.ForeignKey(ChapterPicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
+    chapter_pictures = models.ForeignKey(ChapterPicture, blank=True, null=True, on_delete=models.CASCADE,
+                                         related_name='pictures')
 
     def __str__(self):
         return self.name
@@ -362,7 +365,8 @@ class ResourceItem(models.Model):
 
 class SkillItem(models.Model):
     name = models.CharField(max_length=255, unique=False)
-    category = models.IntegerField(choices=sorted(SkillCategory.choices(), key=lambda x: x[1]), default=SkillCategory.Anomaly)
+    category = models.IntegerField(choices=sorted(SkillCategory.choices(), key=lambda x: x[1]),
+                                   default=SkillCategory.Anomaly)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
@@ -459,13 +463,13 @@ class Rule(models.Model):
 class ItemPdf(models.Model):
     pdf = models.FileField(upload_to='pdf/', null=True, blank=True)
     pdf_assembly_item = models.ForeignKey('ModuleAssembly', blank=False, null=False, on_delete=models.CASCADE,
-                                      related_name='pdf_picture_ModuleAssembly')
+                                          related_name='pdf_picture_ModuleAssembly')
 
 
 class ItemPicture(models.Model):
     picture = models.ImageField(upload_to='static_images')
     imd_assembly_item = models.ForeignKey('ModuleAssembly', blank=False, null=False, on_delete=models.CASCADE,
-                                      related_name='img_picture_ModuleAssembly')
+                                          related_name='img_picture_ModuleAssembly')
 
     def image_preview(self):
         if self.picture:
@@ -625,7 +629,8 @@ class FinancialInstitutionModifier(IntEnum):
 
 class InstitutionPicture(models.Model):
     picture = models.ImageField(upload_to='institutions_images')
-    institution_item = models.ForeignKey('FinancialInstitution', blank=False, null=False, on_delete=models.CASCADE, related_name='picture_institution')
+    institution_item = models.ForeignKey('FinancialInstitution', blank=False, null=False, on_delete=models.CASCADE,
+                                         related_name='picture_institution')
 
     def image_preview(self):
         if self.picture:
@@ -649,14 +654,16 @@ class FinancialInstitution(models.Model):
                                    default=FinancialInstitutionModifier.average, blank=False, null=False)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    institution_pictures = models.ForeignKey(InstitutionPicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
+    institution_pictures = models.ForeignKey(InstitutionPicture, blank=True, null=True, on_delete=models.CASCADE,
+                                             related_name='pictures')
 
     def __str__(self):
         return "{} [{:+}]".format(self.name, self.modifier)
 
 
 class FinancialInvestment(models.Model):
-    character = models.ForeignKey(Character, blank=False, null=False, on_delete=models.CASCADE, related_name='character')
+    character = models.ForeignKey(Character, blank=False, null=False, on_delete=models.CASCADE,
+                                  related_name='character')
     institution = models.ForeignKey(FinancialInstitution, blank=False, null=False, on_delete=models.CASCADE)
     amount_invested = models.IntegerField(blank=False, null=False, default=4)
     die_roll = models.IntegerField(blank=False, null=False, default=1)
@@ -665,7 +672,10 @@ class FinancialInvestment(models.Model):
     investment_date = models.DateTimeField('investment_date', default=timezone.now)
 
     def __str__(self):
-        return "{character} invested {currency} currency in {institution} on {date}".format(character=self.character, currency=self.amount_invested, institution=self.institution.name, date=self.investment_date)
+        return "{character} invested {currency} currency in {institution} on {date}".format(character=self.character,
+                                                                                            currency=self.amount_invested,
+                                                                                            institution=self.institution.name,
+                                                                                            date=self.investment_date)
 
 
 class LootTableItem(models.Model):
@@ -731,6 +741,7 @@ class InvestmentResult(IntEnum):
                 result = result
 
         return result
+
     @staticmethod
     def descriptor_from_die_result(die_result: int):
         result = "Major Loss - lost investment"
@@ -765,9 +776,12 @@ class Advertisement(models.Model):
     def __str__(self):
         return self.name
 
+    def is_active(self) -> bool:
+        today = timezone.now().date()
+
+        return self.start_date <= today <= self.end_date and self.published
+
     class Meta:
         ordering = ["name"]
         verbose_name = 'Advertisement'
         verbose_name_plural = 'Advertisements'
-
-
