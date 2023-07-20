@@ -213,8 +213,20 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# django-resized settings
+DJANGORESIZED_DEFAULT_SIZE = [1920, 1080]
+DJANGORESIZED_DEFAULT_SCALE = 0.5
+DJANGORESIZED_DEFAULT_QUALITY = 75
+DJANGORESIZED_DEFAULT_KEEP_META = True
+# DJANGORESIZED_DEFAULT_FORCE_FORMAT = 'JPEG'
+DJANGORESIZED_DEFAULT_FORMAT_EXTENSIONS = {'JPEG': ".jpg"}
+DJANGORESIZED_DEFAULT_NORMALIZE_ROTATION = True
+
+
 print("STATIC_URL {static_folder}".format(static_folder=STATIC_URL))
 print("MEDIA_URL {static_folder}".format(static_folder=MEDIA_URL))
 print("STATICFILES_DIR {static_folder}".format(static_folder=STATICFILES_DIRS))
 print("ALLOWED HOSTS {allowed_hosts}".format(allowed_hosts=ALLOWED_HOSTS))
 print("DEBUG {debug}".format(debug=Config.DEBUG))
+if Config.DEBUG:
+    print("DB {host}:{port}".format(host=Config.DB_HOST_IP, port=Config.DB_HOST_PORT))
