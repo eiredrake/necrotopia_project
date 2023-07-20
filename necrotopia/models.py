@@ -540,11 +540,11 @@ class ModuleGrade(models.Model):
 class ModuleAssembly(models.Model):
     line_id = models.AutoField(primary_key=True, blank=False, null=False, unique=True)
     name = models.CharField(max_length=255, unique=False)
-    expiration_units = models.SmallIntegerField(default=0, blank=True, null=True)
+    expiration_units = models.SmallIntegerField(default=1, blank=True, null=True)
     time_units = models.IntegerField(choices=TimeUnits.choices(), default=TimeUnits.No_Expiration)
     item_type = models.IntegerField(choices=ComponentType.choices(), default=ComponentType.Gizmo)
-    achievement_mechanics = models.CharField(blank=True, null=True, max_length=1000)
-    print_duplication = models.CharField(blank=True, null=True, max_length=1000)
+    achievement_mechanics = models.CharField(blank=True, null=True, max_length=1000, default=_translate('n/a'))
+    print_duplication = models.CharField(blank=True, null=True, max_length=1000, default=_translate('Basic Education, 2x Basic Scrap, 5 Mind, 20 Minutes'))
     details = models.CharField(blank=True, null=True, max_length=1000)
     registration_date = models.DateTimeField('registration_date', default=timezone.now)
     last_update_date = models.DateTimeField('last_update_date', default=timezone.now)
@@ -556,7 +556,7 @@ class ModuleAssembly(models.Model):
     update_required = models.BooleanField(default=False, blank=True, null=True)
     visual_description = models.CharField(max_length=1000, unique=False, blank=True, null=True)
     season = models.CharField(max_length=50, unique=False, blank=True, null=True)
-    published = models.BooleanField(default=True)
+    published = models.BooleanField(default=False)
     checked = models.BooleanField(default=False)
     tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
     module_grades = models.ForeignKey(ModuleGrade, on_delete=models.CASCADE, blank=True, null=True,
