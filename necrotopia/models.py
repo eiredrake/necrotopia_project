@@ -13,6 +13,7 @@ from django.db.models import CheckConstraint, Q
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _translate
+from django_resized import ResizedImageField
 from imagekit.models import ImageSpecField, ProcessedImageField
 from imagekit.processors import ResizeToFill
 from taggit.forms import TagField
@@ -183,11 +184,11 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     # REQUIRED_FIELDS = ["email"]
 
     def __str__(self):
-        output_string = self.email
+        result = self.email
         if len(self.display_name) > 0:
-            output_string = "{name} {display_name}".format(name=self.email, display_name=self.display_name)
+            result = "({display_name}) {email}".format(email=self.email, display_name=self.display_name)
 
-        return self.email
+        return result
 
     class Meta:
         verbose_name = _translate('user')
@@ -628,7 +629,7 @@ class FinancialInstitutionModifier(IntEnum):
 
 
 class InstitutionPicture(models.Model):
-    picture = models.ImageField(upload_to='institutions_images')
+    picture = ResizedImageField(size=[300, 300], upload_to='institutions_images', crop=['top', 'left'], quality=90, blank=False, null=False)
     institution_item = models.ForeignKey('FinancialInstitution', blank=False, null=False, on_delete=models.CASCADE,
                                          related_name='picture_institution')
 
@@ -769,7 +770,7 @@ class Advertisement(models.Model):
     image = models.ImageField(upload_to='advertisements')
     published = models.BooleanField(default=False)
     start_date = models.DateField(default=timezone.now)
-    end_date = models.DateField(default=timezone.now() + timedelta(days=30))
+    end_date = models.DateField(default=timezone.now)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 

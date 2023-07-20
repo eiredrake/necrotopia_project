@@ -1,5 +1,5 @@
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import django.forms.models
 from django.contrib import admin
@@ -10,6 +10,7 @@ from django.db import models
 from django.forms import TextInput, Textarea
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
+from django.utils import timezone
 from django.utils.timezone import make_aware
 from imagekit.admin import AdminThumbnail
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
@@ -20,9 +21,9 @@ from pypdf import PdfReader, PdfWriter, PdfMerger
 from necrotopia.forms import RegisterUserForm, FinancialInvestmentAddForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
-    ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
-    FinancialInstitution, FinancialInvestment, InvestmentResult, FinancialInstitutionModifier, ChapterPicture, \
-    InstitutionPicture, Advertisement
+    ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, ChapterPicture, \
+    Advertisement, FinancialInstitution, FinancialInstitutionModifier, InvestmentResult, InstitutionPicture, Character, \
+    FinancialInvestment
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -716,5 +717,30 @@ class AdvertisementCarouselAdmin(admin.ModelAdmin):
 
     def get_changeform_initial_data(self, request):
         get_data = super(AdvertisementCarouselAdmin, self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        get_data['end_date'] = timezone.now() + + timedelta(days=30)
+        return get_data
+
+
+@admin.register(Character)
+class CharacterAdmin(NestedModelAdmin):
+    list_display = ('user', 'name', 'registry_date', 'registrar')
+    list_display_links = list_display
+    ordering = ('user', 'name',)
+    search_fields = ('user', 'name',)
+
+    fieldsets = (
+        (None,
+         {
+             'fields': ('user', 'name', )
+         }),
+        ('Registrar', {
+            'classes': ('collapse',),
+            'fields': ('registrar', 'registry_date',),
+        }),
+    )
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(CharacterAdmin, self).get_changeform_initial_data(request)
         get_data['registrar'] = request.user.pk
         return get_data
