@@ -556,6 +556,7 @@ class FinancialInstitutionAdmin(NestedModelAdmin):
     list_display_links = list_display
     ordering = ('branch', 'name',)
     search_fields = ('branch', 'name',)
+    actions = [bulk_tagging]
 
     inlines = [
         FinancialInstitutionPictureInLine
@@ -573,6 +574,7 @@ class FinancialInstitutionAdmin(NestedModelAdmin):
                      'active',
                      'published',
                      'modifier',
+                     'tags',
                  )
          }),
         ('Registrar', {
