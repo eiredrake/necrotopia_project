@@ -5,7 +5,7 @@
 	<div class="no_border no_background" style="width: 100%;">
         <div class="card-header necrotopia-list-titlebar_dark">
             <h4 class="necrotopia-item-titlebar_dark">
-                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Game Skill List ({{ all_skills_found|length }})
+                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Skills ({{ all_skills_found|length }})
             </h4>
         </div>
         <div class="col-lg">
@@ -23,7 +23,7 @@
 
 						<td><a class="btn-link necrotopia_btn_link_dark" href="{% url "skill_view" skill_id=skill.id %}">{{ skill.name }}</a></td>
 						<td>{{ skill.get_item_type }}</td>
-						<td>{{ skill.get_tags_string }}</td>
+						<td>{{ skill.tags }}</td>
 					</tr>
 					{% endfor %}
 				</tbody>
