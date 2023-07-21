@@ -312,7 +312,7 @@ class SkillCategoryForm(forms.Form):
 @admin.register(SkillItem)
 class SkillItemAdmin(NestedModelAdmin):
     list_display = ('name', 'category', 'trunc_description', 'tags', )
-    search_fields = ('name', 'category', )
+    search_fields = ('name', 'category', 'tags')
     fieldsets = (
         (None,
          {
