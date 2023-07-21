@@ -316,7 +316,7 @@ class SkillItemAdmin(NestedModelAdmin):
     fieldsets = (
         (None,
          {
-             'fields': ('name', 'category', )
+             'fields': ('name', 'category', 'tags' )
          }),
         ('Registrar', {
             'classes': ('collapse',),
@@ -331,7 +331,7 @@ class SkillItemAdmin(NestedModelAdmin):
         get_data = {'registrar': request.user.pk}
         return get_data
 
-    actions = ['set_skill_category']
+    actions = ['set_skill_category', bulk_tagging]
 
     def set_skill_category(self, request, queryset):
         if 'do_action' in request.POST:
@@ -380,13 +380,16 @@ class RuleAdmin(NestedModelAdmin):
     fieldsets = (
         (None,
          {
-             'fields': ('name', 'reference', 'slug', 'text',)
+             'fields': ('name', 'reference', 'slug', 'text', 'tags')
          }),
         ('Creator', {
             'classes': ('collapse',),
             'fields': ('creator', 'creation_date'),
         }),
     )
+
+    actions = [bulk_tagging]
+
 
     def get_changeform_initial_data(self, request):
         get_data = {'creator': request.user.pk}
@@ -435,7 +438,7 @@ class ModuleGradeInline(NestedTabularInline):
 
 @admin.register(ModuleAssembly)
 class ModuleAssemblyAdmin(NestedModelAdmin):
-    actions = ['print_pdfs']
+    actions = ['print_pdfs', bulk_tagging]
     list_display = (
     'name', 'item_type', 'checked', 'published', 'has_image', 'has_pdf', 'last_update_date', 'expiration', 'tags')
     list_display_links = list_display
