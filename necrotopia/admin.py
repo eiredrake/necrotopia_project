@@ -45,19 +45,17 @@ def bulk_tagging(self, request, queryset):
         replace = request.POST.get('replace')
 
     if 'apply' in request.POST:
-        tag_string = request.POST.get('new_tags')
-        new_tags = tagging.models.parse_tag_input(tag_string)
+        new_tag_string = request.POST.get('new_tags')
+        new_tags_list = tagging.models.parse_tag_input(new_tag_string)
 
         for tagged_item in queryset:
-            new_tag_string = tagged_item.tags
-            if replace:
-                new_tag_string = tag_string
-                Tag.objects.update_tags(tagged_item, new_tags)
-            else:
-                new_tag_string = new_tag_string + ", " + tag_string
-                for tag in new_tags:
-                    Tag.objects.add_tag(tagged_item, tag)
+            Tag.objects.update_tags(tagged_item, None)
+            if not replace:
+                old_tags_list = tagging.models.parse_tag_input(tagged_item.tags)
+                new_tags_list = list(set(new_tags_list) | set(old_tags_list))
+                new_tag_string = ", ".join(new_tags_list)
 
+            Tag.objects.update_tags(tagged_item, new_tags_list)
             tagged_item.tags = new_tag_string
             tagged_item.save()
 
@@ -297,13 +295,6 @@ class ResourceItemAdmin(NestedModelAdmin):
     )
     actions = [bulk_tagging]
 
-    def related_skills(self, obj):
-        if obj.ratedskillitem_set is not None:
-            the_skills = obj.ratedskillitem_set.all().order_by('grade', 'skill__name', )
-            return u", ".join(str(o) for o in the_skills)
-        else:
-            return dir(obj)
-
     def expiration(self, obj):
         if obj.time_units != TimeUnits.No_Expiration:
             x = TimeUnits(obj.time_units).name
@@ -321,7 +312,7 @@ class SkillCategoryForm(forms.Form):
 @admin.register(SkillItem)
 class SkillItemAdmin(NestedModelAdmin):
     list_display = ('name', 'category', 'trunc_description', 'tags', )
-    search_fields = ('name', 'category', )
+    search_fields = ('name', 'category', 'tags')
     fieldsets = (
         (None,
          {
