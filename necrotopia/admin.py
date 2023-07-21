@@ -1,7 +1,9 @@
 import io
 from datetime import datetime, timedelta
+from typing import cast
 
 import django.forms.models
+import tagging
 from django.contrib import admin
 from django.contrib.admin.checks import InlineModelAdminChecks
 from django.contrib.admin.helpers import ActionForm
@@ -15,8 +17,9 @@ from django.utils.timezone import make_aware
 from imagekit.admin import AdminThumbnail
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
 from rolldice import rolldice
-from taggit.forms import TagField, TextareaTagWidget
 from pypdf import PdfReader, PdfWriter, PdfMerger
+from tagging.forms import TagField
+from tagging.models import TaggedItem, Tag, TagManager
 
 from necrotopia.forms import RegisterUserForm, FinancialInvestmentAddForm
 from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
@@ -31,12 +34,45 @@ from django.utils.translation import gettext_lazy as _translate
 from django.contrib import messages
 from necrotopia.views import send_registration_email
 from necrotopia_project.settings import GLOBAL_SITE_NAME
-from taggit.forms import TagField
-from taggit.managers import TaggableManager
-from taggit.models import Tag
 from functools import partial as curry
 
 
+@admin.action(description='Set the tags of all selected items.')
+def bulk_tagging(self, request, queryset):
+    replace = False
+
+    if 'replace' in request.POST:
+        replace = request.POST.get('replace')
+
+    if 'apply' in request.POST:
+        tag_string = request.POST.get('new_tags')
+        new_tags = tagging.models.parse_tag_input(tag_string)
+
+        for tagged_item in queryset:
+            new_tag_string = tagged_item.tags
+            if replace:
+                new_tag_string = tag_string
+                Tag.objects.update_tags(tagged_item, new_tags)
+            else:
+                new_tag_string = new_tag_string + ", " + tag_string
+                for tag in new_tags:
+                    Tag.objects.add_tag(tagged_item, tag)
+
+            tagged_item.tags = new_tag_string
+            tagged_item.save()
+
+        self.message_user(request, level=messages.SUCCESS,
+                          message="Changed tags on {} items".format(queryset.count()))
+        return HttpResponseRedirect(request.get_full_path())
+    elif 'cancel' in request.POST:
+        self.message_user(request, level=messages.ERROR, message="Action cancelled")
+        return HttpResponseRedirect(request.get_full_path())
+    else:
+
+        return render(request, 'necrotopia/bulk_tagging.html', context={
+            "title": 'Confirm Action',
+            "items": queryset,
+        })
 
 def deactivate_user(modeladmin, request, queryset):
     deactivate_user.short_description = 'Deactivate user'
@@ -221,7 +257,7 @@ class UsefulLinksAdmin(NestedModelAdmin):
 
 class ResourceItemAdminForm(forms.ModelForm):
     name = forms.CharField(widget=forms.TextInput(attrs={'style': 'width: 50em;'}))
-    tags = TagField(widget=TextareaTagWidget(attrs={'style': 'width: 50em'}))
+    tags = TagField()
 
 
 class RatedSkillInline(NestedTabularInline):
@@ -242,12 +278,10 @@ class SkillRatingInline(NestedTabularInline):
 @admin.register(ResourceItem)
 class ResourceItemAdmin(NestedModelAdmin):
     form = ResourceItemAdminForm
-    tag_display = ['tag_list']
-    # fields = ('name', 'expiration_units', 'time_units', 'tags', 'registrar', 'registry_date')
-    list_display = ('name', 'expiration', 'related_skills', 'tag_list')
+    list_display = ('name', 'expiration', 'tags')
     list_display_links = list_display
     ordering = ('name',)
-    search_fields = ('name', 'tags__name', 'ratedskillitem__skill__name')
+    search_fields = ('name', 'tags')
     inlines = [
         # RatedSkillInline,
     ]
@@ -261,41 +295,7 @@ class ResourceItemAdmin(NestedModelAdmin):
             'fields': ('registrar', 'registry_date'),
         }),
     )
-    actions = ['bulk_tagging']
-
-    @admin.action(description='Set the tags of all selected items.')
-    def bulk_tagging(self, request, queryset):
-        # print("post: %s" % request.POST)
-        replace = False
-
-        if 'replace' in request.POST:
-            replace = request.POST.get('replace')
-
-        # print('replace: %s' % str(replace))
-
-        if 'apply' in request.POST:
-            new_tags = request.POST.get('new_tags')
-            new_tags = new_tags.split(',')
-
-            for item in queryset:
-                old_tags = list(item.tags.all())
-                if not replace:
-                    new_tags = new_tags + old_tags
-
-                item.tags.set(tags=new_tags, through_defaults=None, clear=False)
-
-            self.message_user(request, level=messages.SUCCESS,
-                              message="Changed tags on {} items".format(queryset.count()))
-            return HttpResponseRedirect(request.get_full_path())
-        elif 'cancel' in request.POST:
-            self.message_user(request, level=messages.ERROR, message="Action cancelled")
-            return HttpResponseRedirect(request.get_full_path())
-        else:
-
-            return render(request, 'necrotopia/bulk_tagging.html', context={
-                "title": 'Confirm Action',
-                "items": queryset,
-            })
+    actions = [bulk_tagging]
 
     def related_skills(self, obj):
         if obj.ratedskillitem_set is not None:
@@ -309,13 +309,6 @@ class ResourceItemAdmin(NestedModelAdmin):
             x = TimeUnits(obj.time_units).name
             return f'{obj.expiration_units} {x}'
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('tags')
-
-    def tag_list(self, obj):
-        the_tags = obj.tags.all().order_by('name')
-        return u", ".join(o.name for o in the_tags)
-
     def get_changeform_initial_data(self, request):
         get_data = {'registrar': request.user.pk}
         return get_data
@@ -327,13 +320,12 @@ class SkillCategoryForm(forms.Form):
 
 @admin.register(SkillItem)
 class SkillItemAdmin(NestedModelAdmin):
-    tag_display = ['tag_list']
-    list_display = ('name', 'category', 'trunc_description', 'tag_list')
-    search_fields = ('name', 'category', 'tags__name')
+    list_display = ('name', 'category', 'trunc_description', 'tags', )
+    search_fields = ('name', 'category', )
     fieldsets = (
         (None,
          {
-             'fields': ('name', 'category', 'tags')
+             'fields': ('name', 'category', )
          }),
         ('Registrar', {
             'classes': ('collapse',),
@@ -343,10 +335,6 @@ class SkillItemAdmin(NestedModelAdmin):
     inlines = [
         SkillRatingInline,
     ]
-
-    def tag_list(self, obj):
-        the_tags = obj.tags.all().order_by('name')
-        return u", ".join(o.name for o in the_tags)
 
     def get_changeform_initial_data(self, request):
         get_data = {'registrar': request.user.pk}
@@ -392,8 +380,7 @@ class RuleAdminForm(forms.ModelForm):
 
 @admin.register(Rule)
 class RuleAdmin(NestedModelAdmin):
-    tag_display = ['tag_list']
-    list_display = ('name', 'partial_slug', 'reference', 'tag_list')
+    list_display = ('name', 'partial_slug', 'reference', 'tags')
     list_display_links = list_display
     inlines = [
         RulePictureInLine,
@@ -402,7 +389,7 @@ class RuleAdmin(NestedModelAdmin):
     fieldsets = (
         (None,
          {
-             'fields': ('name', 'reference', 'slug', 'text', 'tags')
+             'fields': ('name', 'reference', 'slug', 'text',)
          }),
         ('Creator', {
             'classes': ('collapse',),
@@ -413,10 +400,6 @@ class RuleAdmin(NestedModelAdmin):
     def get_changeform_initial_data(self, request):
         get_data = {'creator': request.user.pk}
         return get_data
-
-    def tag_list(self, obj):
-        the_tags = obj.tags.all().order_by('name')
-        return u", ".join(o.name for o in the_tags)
 
     def images(self, obj):
         if obj.pictures is not None:
@@ -459,26 +442,14 @@ class ModuleGradeInline(NestedTabularInline):
     ]
 
 
-class ModuleGradeInline(NestedTabularInline):
-    extra = 0
-    max_num = 3
-    model = ModuleGrade
-    fields = ('grade', 'name', 'mind', 'time', 'mechanics')
-    inlines = [
-        ModuleResourceInline,
-        ModuleSubAssemblyInLine,
-    ]
-
-
 @admin.register(ModuleAssembly)
 class ModuleAssemblyAdmin(NestedModelAdmin):
-    tag_display = ['tag_list']
     actions = ['print_pdfs']
     list_display = (
-    'name', 'item_type', 'checked', 'published', 'has_image', 'has_pdf', 'last_update_date', 'expiration', 'tag_list')
+    'name', 'item_type', 'checked', 'published', 'has_image', 'has_pdf', 'last_update_date', 'expiration', 'tags')
     list_display_links = list_display
     ordering = ('name',)
-    search_fields = ('name', 'published', 'checked', 'tags__name',)
+    search_fields = ('name', 'published', 'checked', )
     inlines = [
         ItemPictureInLine,
         ItemPdfInLine,
@@ -562,10 +533,6 @@ class ModuleAssemblyAdmin(NestedModelAdmin):
             x = TimeUnits(obj.time_units).name
             return f'{obj.expiration_units} {x}'
 
-    def tag_list(self, obj):
-        the_tags = obj.tags.all().order_by('name')
-        return u", ".join(o.name for o in the_tags)
-
     def get_changeform_initial_data(self, request):
         get_data = super(ModuleAssemblyAdmin, self).get_changeform_initial_data(request)
         get_data['registrar'] = request.user.pk
@@ -583,9 +550,6 @@ class ModuleAssemblyAdmin(NestedModelAdmin):
         if 'print_duplication' in form.base_fields:
             form.base_fields['print_duplication'].widget.attrs['style'] = 'width: 45em;'
 
-        if 'tags' in form.base_fields:
-            form.base_fields['tags'].widget.attrs['style'] = 'width: 100em; height: 5em;'
-
         if 'details' in form.base_fields:
             form.base_fields['details'].widget.attrs['style'] = 'width: 100em; height: 5em;'
 
@@ -594,7 +558,7 @@ class ModuleAssemblyAdmin(NestedModelAdmin):
 
 @admin.register(FinancialInstitution)
 class FinancialInstitutionAdmin(NestedModelAdmin):
-    list_display = ('branch', 'name', 'active', 'published', 'modifier', 'registry_date', 'registrar')
+    list_display = ('branch', 'name', 'active', 'published', 'modifier', 'registry_date', 'registrar', 'tags')
     list_display_links = list_display
     ordering = ('branch', 'name',)
     search_fields = ('branch', 'name',)

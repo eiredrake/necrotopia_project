@@ -1,4 +1,6 @@
 import re
+
+import tagging
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
@@ -14,6 +16,8 @@ from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 from django.contrib.auth import login as auth_login
+from tagging.models import TaggedItem
+
 from Config import Config
 from necrotopia.forms import AuthenticateUserForm, RegisterUserForm, UserProfileForm
 from necrotopia.models import UserProfile, Rule, RulePicture, ModuleAssembly, Advertisement, ItemPicture, ModuleGrade, \
@@ -204,6 +208,14 @@ def user_profile_change(request, template='necrotopia/user_profile_change.html')
     return render(request, template, context=context)
 
 
+def tag_OR_query(model, tags):
+    result = TaggedItem.objects.none()
+    for tag in tags:
+        result = result.union(TaggedItem.objects.get_by_model(model, tag))
+
+    return result
+
+
 def search_results(request):
     search_terms = []
     all_rules_found = []
@@ -213,25 +225,27 @@ def search_results(request):
         search_terms = request.POST['search_terms']
         search_terms_list = list(search_terms.lower().split(','))
 
+        tags = tagging.models.get_tag_list(search_terms)
+
         blueprints_by_name = ModuleAssembly.objects.filter(name__icontains=search_terms)
-        blueprints_by_tag = ModuleAssembly.objects.filter(tags__name__in=search_terms)
+        blueprints_by_tag = tag_OR_query(model=ModuleAssembly, tags=tags)
         all_blueprints_found = blueprints_by_name.union(blueprints_by_tag).order_by('name')
 
         rules_by_name = Rule.objects.filter(name__icontains=search_terms)
-        rules_by_tag = Rule.objects.filter(tags__name__in=search_terms_list)
+        rules_by_tag = tag_OR_query(model=Rule, tags=tags)
         all_rules_found = rules_by_name.union(rules_by_tag).order_by('name')
 
         skills_by_name = SkillItem.objects.filter(name__icontains=search_terms)
-        # skills_by_tag = SkillItem.objects.filter(tags__name_in=search_terms_list)
-        all_skills_found = skills_by_name # skills_by_name.union(skills_by_tag).order_by('name')
+        skills_by_tag = tag_OR_query(model=SkillItem, tags=tags)
+        all_skills_found = skills_by_name.union(skills_by_tag).order_by('name')
 
         resource_by_name = ResourceItem.objects.filter(name__icontains=search_terms)
-        resource_by_tag = ResourceItem.objects.filter(tags__name__in=search_terms_list)
+        resource_by_tag = tag_OR_query(model=ResourceItem, tags=tags)
         all_resources_found = resource_by_name.union(resource_by_tag).order_by('name')
 
-        context['all_rules_found'] = all_rules_found
         context['all_blueprints_found'] = all_blueprints_found
         context['all_skills_found'] = all_skills_found
+        context['all_rules_found'] = all_rules_found
         context['all_resources_found'] = all_resources_found
         context['search_terms'] = search_terms_list
         context['title'] = GLOBAL_SITE_NAME

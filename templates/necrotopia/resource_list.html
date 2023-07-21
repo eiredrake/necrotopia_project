@@ -5,7 +5,7 @@
 	<div class="no_border no_background" style="width: 100%;">
         <div class="card-header necrotopia-list-titlebar_dark">
             <h4 class="necrotopia-item-titlebar_dark">
-                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Game Resource List ({{ all_resources_found|length }})
+                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Resources ({{ all_resources_found|length }})
             </h4>
         </div>
         <div class="col-lg">
@@ -22,7 +22,7 @@
                         <tr>
                             <td><a class="btn-link necrotopia_btn_link_dark " href="{% url "resource_view" resource_id=resource.id %}">{{ resource.name }}</a></td>
                             <td>{{ resource.get_expiration }}</td>
-                            <td>{{ resource.get_tags_string }}</td>
+                            <td>{{ resource.tags }}</td>
                         </tr>
                     {% endfor %}
 				</tbody>

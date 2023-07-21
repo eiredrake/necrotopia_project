@@ -8,7 +8,7 @@
 {% block content %}
     <div class="container-fluid no-padding">
         {% if search_terms|length > 0 %}
-            {% if all_rules_found|length > 0 or all_blueprints_found|length > 0 or all_skills_found|length > 0 or all_resources_found %}
+            {% if all_rules_found|length > 0 or all_blueprints_found|length > 0 or all_skills_found|length > 0 or all_resources_found|length > 0 %}
                 {% if all_rules_found|length > 0 %}
                     {% block rules %}
                         {% include 'necrotopia/rules_list.html' with all_rules_found=all_rules_found %}

@@ -22,6 +22,7 @@
 								<th>Rule</th>
 								<th>Book Reference</th>
                                 <th>Slug</th>
+                                <th>Tags</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -30,6 +31,7 @@
                                 <td><a class="btn-link" href="{% url "rule_view" rule_id=rule.id %}">{{ rule.name }}</a></td>
                                 <td>{{ rule.reference }}</td>
                                 <td>{{ rule.slug }}</td>
+                                <td>{{ rule.tags }}</td>
 							</tr>
 							{% endfor %}
 						</tbody>

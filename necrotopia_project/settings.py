@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 
 from django.template.context_processors import media
+import django
+from django.utils.encoding import smart_str
+django.utils.encoding.smart_text = smart_str
 
 from Config import Config
 import os
@@ -81,7 +84,7 @@ INSTALLED_APPS = [
     'django_password_validators',
     'django_password_validators.password_history',
     'django_bootstrap_icons',
-    'taggit',
+    'tagging',
     'storages',
     'necrotopia',
 ]

@@ -5,7 +5,7 @@
 	<div class="no_border no_background" style="width: 100%;">
         <div class="card-header necrotopia-list-titlebar_dark">
             <h4 class="necrotopia-item-titlebar_dark">
-                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Game Blueprint List ({{ all_blueprints_found|length }})
+                <i class="fa-solid fa-book-open necrotopia_section_icon"></i>Blueprints ({{ all_blueprints_found|length }})
             </h4>
         </div>
         <div class="col-lg">
@@ -25,7 +25,7 @@
                             <td>{{ blueprint.name }}</td>
                             <td>{{ blueprint.get_item_type }}</td>
                             <td>{{ blueprint.get_expiration }}</td>
-                            <td>{{ blueprint.get_tags_string }}</td>
+                            <td>{{ blueprint.tags }}</td>
                         </tr>
                     {% endfor %}
 				</tbody>

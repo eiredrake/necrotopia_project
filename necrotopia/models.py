@@ -16,9 +16,7 @@ from django.utils.translation import gettext as _translate
 from django_resized import ResizedImageField
 from imagekit.models import ImageSpecField, ProcessedImageField
 from imagekit.processors import ResizeToFill
-from taggit.forms import TagField
-from taggit.managers import TaggableManager
-from taggit.models import Tag
+from tagging.fields import TagField
 
 from necrotopia.managers import CustomUserManager
 
@@ -217,7 +215,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
         return self.first_name
 
     def email_user(self, subject, message, from_email=None, **kwargs):
-        """Send an email to this user."""
+        """ Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
@@ -330,9 +328,9 @@ class ResourceItem(models.Model):
     time_units = models.IntegerField(choices=TimeUnits.choices(), default=TimeUnits.months)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
     rated_skills = models.ForeignKey('RatedSkillItem', on_delete=models.CASCADE, null=True, blank=True,
                                      related_name='related_skills')
+    tags = TagField()
 
     def get_expiration(self):
         if self.expiration_units == 0 or self.time_units == TimeUnits.No_Expiration:
@@ -342,9 +340,6 @@ class ResourceItem(models.Model):
             time_string = TimeUnits(self.time_units).name
 
             return f'{expiration_units_string} {time_string}'
-
-    def get_tags_string(self):
-        return ', '.join(t for t in self.tags.names())
 
     def get_related_skills(self):
         return ''
@@ -370,9 +365,10 @@ class SkillItem(models.Model):
                                    default=SkillCategory.Anomaly)
     registry_date = models.DateTimeField('registry_date', default=timezone.now)
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
     skill_ratings = models.ForeignKey('SkillRatings', on_delete=models.CASCADE, null=True, blank=True,
                                       related_name='skill_ratings')
+
+    tags = TagField()
 
     def __str__(self):
         return self.name
@@ -381,9 +377,6 @@ class SkillItem(models.Model):
         ordering = ['name', ]
         verbose_name = 'Skill'
         verbose_name_plural = 'Skills'
-
-    def get_tags_string(self):
-        return ', '.join(t for t in self.tags.names())
 
     def get_item_type(self):
         return SkillCategory(self.category).name
@@ -448,14 +441,11 @@ class Rule(models.Model):
     text = models.CharField(max_length=2048, unique=False, blank=True, null=True)
     creation_date = models.DateTimeField('creation_date', default=timezone.now)
     creator = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
     pictures = models.ForeignKey(RulePicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
+    tags = TagField()
 
     def __str__(self):
         return self.name
-
-    def get_tags_string(self):
-        return ', '.join(t for t in self.tags.names())
 
     def partial_slug(self):
         return "{slug}...".format(slug=self.slug[:50])
@@ -558,9 +548,9 @@ class ModuleAssembly(models.Model):
     season = models.CharField(max_length=50, unique=False, blank=True, null=True)
     published = models.BooleanField(default=False)
     checked = models.BooleanField(default=False)
-    tags = TaggableManager(blank=True, verbose_name='Tags', help_text='A comma-separated list of tags')
     module_grades = models.ForeignKey(ModuleGrade, on_delete=models.CASCADE, blank=True, null=True,
                                       related_name='moduleGrade_grades')
+    tags = TagField()
 
     def flatten(self):
         result = dict()
@@ -580,9 +570,6 @@ class ModuleAssembly(models.Model):
 
     def get_item_type(self):
         return ComponentType(self.item_type).name
-
-    def get_tags_string(self):
-        return ', '.join(t for t in self.tags.names())
 
     def get_expiration(self):
         if self.expiration_units == 0 or self.time_units == TimeUnits.No_Expiration:
@@ -657,6 +644,7 @@ class FinancialInstitution(models.Model):
     registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     institution_pictures = models.ForeignKey(InstitutionPicture, blank=True, null=True, on_delete=models.CASCADE,
                                              related_name='pictures')
+    tags = TagField()
 
     def __str__(self):
         return "{} [{:+}]".format(self.name, self.modifier)
