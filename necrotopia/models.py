@@ -2,6 +2,7 @@ from datetime import timedelta
 from enum import IntEnum
 from typing import TypedDict
 
+import PIL
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Permission, User, \
     PermissionsMixin
 from django.core.exceptions import ValidationError
@@ -19,6 +20,7 @@ from imagekit.processors import ResizeToFill
 from tagging.fields import TagField
 
 from necrotopia.managers import CustomUserManager
+from necrotopia.tools import ImageTool
 
 USERNAME_FIELD = 'email'
 
@@ -217,109 +219,6 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """ Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
-
-
-class UsefulLinks(models.Model):
-    name = models.CharField(max_length=255, unique=False, blank=False, null=False)
-    description = models.CharField(max_length=500, unique=False, blank=True, null=True)
-    url = models.URLField(blank=False, null=False)
-    published = models.BooleanField(blank=False, null=False, default=True)
-    registry_date = models.DateTimeField('registry_date', default=timezone.now)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
-    chapter_link = models.ForeignKey('Chapter', on_delete=models.CASCADE, blank=True, null=True)
-
-    def __str__(self):
-        return "{name} {url}".format(name=self.name, url=self.url)
-
-    def clean(self):
-        cleaned_data = super(UsefulLinks, self).clean()
-        if self.chapter_link.pk is None:
-            if self.chapter_link.registrar is not None:
-                self.registrar = self.chapter_link.registrar
-                self.registrar_id = self.chapter_link.registrar_id
-
-        return cleaned_data
-
-    class Meta:
-        verbose_name_plural = "Chapter Useful Links"
-        verbose_name = "Chapter Useful Link"
-
-
-class ChapterStaffType(models.Model):
-    name = models.CharField(max_length=255, unique=True, blank=False, null=False)
-    description = models.CharField(max_length=255, blank=True, null=True)
-    registry_date = models.DateTimeField('registry_date', default=timezone.now, blank=False, null=False)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=False, null=False)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name_plural = "chapter staff type"
-
-
-class Department(models.Model):
-    name = models.CharField(max_length=255, unique=True, blank=False, null=False)
-    description = models.CharField(max_length=255, blank=True, null=True)
-    registry_date = models.DateTimeField('registry_date', default=timezone.now, blank=False, null=False)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=False, null=False)
-
-    def __str__(self):
-        return self.name
-
-
-class ChapterStaff(models.Model):
-    user_profile = models.ForeignKey(UserProfile, blank=False, null=False, on_delete=models.CASCADE)
-    type = models.ForeignKey(ChapterStaffType, blank=False, null=False, on_delete=models.CASCADE)
-    chapter_link = models.ForeignKey('Chapter', blank=True, null=True, on_delete=models.CASCADE)
-    department = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
-
-    def email(self):
-        return self.user_profile.email
-
-    def display_name(self):
-        return self.user_profile.display_name
-
-    def __str__(self):
-        return self.user_profile.display_name
-
-
-class ChapterPicture(models.Model):
-    picture = models.ImageField(upload_to='chapter_images')
-    chapter_item = models.ForeignKey('Chapter', blank=False, null=False, on_delete=models.CASCADE,
-                                     related_name='picture_chapter')
-
-    def image_preview(self):
-        if self.picture:
-            return mark_safe(
-                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
-        else:
-            return '(No image)'
-
-    def __str__(self):
-        return self.picture.name
-
-
-class Chapter(models.Model):
-    name = models.CharField(max_length=255, unique=True, blank=False, null=False)
-    active = models.BooleanField(blank=False, null=False, default=True)
-    registry_date = models.DateTimeField('registry_date', default=timezone.now)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='chapter_registrar')
-    useful_links = models.ForeignKey(UsefulLinks, on_delete=models.CASCADE, blank=True, null=True)
-    staff = models.ForeignKey(ChapterStaff, null=True, blank=True, on_delete=models.CASCADE)
-    chapter_pictures = models.ForeignKey(ChapterPicture, blank=True, null=True, on_delete=models.CASCADE,
-                                         related_name='pictures')
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name_plural = "chapters"
-
-    def get_changeform_initial_data(self, request):
-        get_data = super(self).get_changeform_initial_data(request)
-        get_data['registrar'] = request.user.pk
-        return get_data
 
 
 class ResourceItem(models.Model):
@@ -545,11 +444,11 @@ class ModuleAssembly(models.Model):
     usage_tree = models.CharField(max_length=100, unique=False, blank=True, null=True, default='n/a')
     update_required = models.BooleanField(default=False, blank=True, null=True)
     visual_description = models.CharField(max_length=1000, unique=False, blank=True, null=True)
-    season = models.CharField(max_length=50, unique=False, blank=True, null=True)
     published = models.BooleanField(default=False)
     checked = models.BooleanField(default=False)
     module_grades = models.ForeignKey(ModuleGrade, on_delete=models.CASCADE, blank=True, null=True,
                                       related_name='moduleGrade_grades')
+
     tags = TagField()
 
     def flatten(self):
@@ -588,85 +487,6 @@ class ModuleAssembly(models.Model):
         verbose_name_plural = 'Blueprints'
 
 
-class Character(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, unique=False, blank=False, null=False)
-    registry_date = models.DateTimeField('registry_date', default=timezone.now)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='registrar')
-
-    def __str__(self):
-        return self.name
-
-
-class FinancialInstitutionModifier(IntEnum):
-    very_poor = -3
-    poor = -2
-    below_average = -1
-    average = 0
-    good = 1
-    very_good = 2
-    outstanding = 3
-
-    def __str__(self):
-        return "{label} ({modifier})".format(label=self.name, modifier=self.value).title().replace("_", " ")
-
-    @classmethod
-    def choices(cls):
-        return [(key.value, str(key)) for key in cls]
-
-
-class InstitutionPicture(models.Model):
-    picture = ResizedImageField(size=[300, 300], upload_to='institutions_images', crop=['top', 'left'], quality=90, blank=False, null=False)
-    institution_item = models.ForeignKey('FinancialInstitution', blank=False, null=False, on_delete=models.CASCADE,
-                                         related_name='picture_institution')
-
-    def image_preview(self):
-        if self.picture:
-            return mark_safe(
-                '<a href="%s"><img src="%s" width="150" height="150" /></a>' % (self.picture.url, self.picture.url))
-        else:
-            return '(No image)'
-
-    def __str__(self):
-        return self.picture.name
-
-
-class FinancialInstitution(models.Model):
-    branch = models.ForeignKey(Chapter, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, unique=True)
-    slug = models.CharField(max_length=255, unique=False, blank=True, null=True)
-    text = models.CharField(max_length=2048, unique=False, blank=True, null=True)
-    active = models.BooleanField(default=False)
-    published = models.BooleanField(default=False)
-    modifier = models.IntegerField(choices=FinancialInstitutionModifier.choices(),
-                                   default=FinancialInstitutionModifier.average, blank=False, null=False)
-    registry_date = models.DateTimeField('registry_date', default=timezone.now)
-    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    institution_pictures = models.ForeignKey(InstitutionPicture, blank=True, null=True, on_delete=models.CASCADE,
-                                             related_name='pictures')
-    tags = TagField()
-
-    def __str__(self):
-        return "{} [{:+}]".format(self.name, self.modifier)
-
-
-class FinancialInvestment(models.Model):
-    character = models.ForeignKey(Character, blank=False, null=False, on_delete=models.CASCADE,
-                                  related_name='character')
-    institution = models.ForeignKey(FinancialInstitution, blank=False, null=False, on_delete=models.CASCADE)
-    amount_invested = models.IntegerField(blank=False, null=False, default=4)
-    die_roll = models.IntegerField(blank=False, null=False, default=1)
-    modifier = models.IntegerField(blank=False, null=False, default=0)
-    roll_total = models.IntegerField(blank=False, null=False, default=0)
-    investment_date = models.DateTimeField('investment_date', default=timezone.now)
-
-    def __str__(self):
-        return "{character} invested {currency} currency in {institution} on {date}".format(character=self.character,
-                                                                                            currency=self.amount_invested,
-                                                                                            institution=self.institution.name,
-                                                                                            date=self.investment_date)
-
-
 class LootTableItem(models.Model):
     item_name = models.CharField(max_length=255, unique=True)
     probability = models.FloatField(null=False, blank=False,
@@ -695,61 +515,6 @@ class LootTable(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class InvestmentResult(IntEnum):
-    Major_Loss = 1
-    Minor_Loss = 2
-    Break_Even = 3
-    Minor_Gain = 4
-    Major_Gain = 5
-    Jackpot = 6
-
-    def __str__(self):
-        return str(self.name)
-
-    @classmethod
-    def choices(cls):
-        return [(key.value, key.name) for key in cls]
-
-    @staticmethod
-    def instructions_from_die_result(die_result: int):
-        result = "Major Loss - collect 4 from player"
-        match die_result:
-            case InvestmentResult.Minor_Loss:
-                result = "Minor Loss - collect 2 from player"
-            case InvestmentResult.Break_Even:
-                result = "Broke Even - give player back 4"
-            case InvestmentResult.Minor_Gain:
-                result = "Minor Gain - give player back 5"
-            case InvestmentResult.Major_Gain:
-                result = "Major gain - give player back 6"
-            case _ if die_result >= InvestmentResult.Jackpot:
-                result = "Jackpot! - give player back 8"
-            case other:
-                result = result
-
-        return result
-
-    @staticmethod
-    def descriptor_from_die_result(die_result: int):
-        result = "Major Loss - lost investment"
-        match die_result:
-            case InvestmentResult.Minor_Loss:
-                result = "Minor Loss - lost half of investment"
-            case InvestmentResult.Break_Even:
-                result = "Broke Even - no gain, no losses"
-            case InvestmentResult.Minor_Gain:
-                result = "Minor Gain - gained 1"
-            case InvestmentResult.Major_Gain:
-                result = "Major gain - gained 2"
-            case _ if die_result >= InvestmentResult.Jackpot:
-                result = "Jackpot! - gained 4"
-            case other:
-                result = result
-
-        return result
-
 
 class Advertisement(models.Model):
     name = models.CharField(max_length=60, default='', blank=True)

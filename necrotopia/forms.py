@@ -14,7 +14,7 @@ from django_password_validators.password_character_requirements.password_validat
 from django_password_validators.password_history.models import PasswordHistory
 from django_password_validators.password_history.password_validation import UniquePasswordsValidator
 
-from necrotopia.models import UserProfile, Title, Gender, UsefulLinks, FinancialInvestment, Character
+from necrotopia.models import UserProfile, Title, Gender
 
 
 class AuthenticateUserForm(AuthenticationForm):
@@ -73,14 +73,4 @@ class UserProfileForm(forms.ModelForm):
         # self.fields["gender"].choices = [(item.id, item.descriptor) for item in Gender.objects.all()]
         # self.fields["title"].choices = [(item.id, item.descriptor) for item in Title.objects.all()]
 
-
-class FinancialInvestmentAddForm(forms.Form):
-    class Meta:
-        model = FinancialInvestment
-        fields = [
-            'character',
-        ]
-        widgets = {
-            'character': forms.ModelChoiceField(Character.objects.all()),
-        }
 
