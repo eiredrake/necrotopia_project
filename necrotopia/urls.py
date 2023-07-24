@@ -19,5 +19,7 @@ urlpatterns = [
     path('skill_view/<int:skill_id>', views.skill_view, name='skill_view'),
     path('resource_view/<int:resource_id>', views.resource_view, name='resource_view'),
     path('resources_list', views.resources_list, name='resources_list'),
+    path('chapter_list', views.chapter_list, name='chapter_list'),
+    path('chapter_view/<int:chapter_id>', views.chapter_view, name='chapter_view'),
 ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -13,6 +13,7 @@ from django.forms import TextInput, Textarea
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.timezone import make_aware
 from imagekit.admin import AdminThumbnail
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline
@@ -21,12 +22,11 @@ from pypdf import PdfReader, PdfWriter, PdfMerger
 from tagging.forms import TagField
 from tagging.models import TaggedItem, Tag, TagManager
 
-from necrotopia.forms import RegisterUserForm, FinancialInvestmentAddForm
-from necrotopia.models import UserProfile, Title, ChapterStaffType, Chapter, Gender, UsefulLinks, TimeUnits, \
-    ResourceItem, RatedSkillItem, SkillRatings, SkillItem, ChapterStaff, Department, SkillCategory, RulePicture, Rule, \
-    ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, ChapterPicture, \
-    Advertisement, FinancialInstitution, FinancialInstitutionModifier, InvestmentResult, InstitutionPicture, Character, \
-    FinancialInvestment
+from necrotopia.forms import RegisterUserForm
+from necrotopia.models import UserProfile, Title, Gender, TimeUnits, \
+    ResourceItem, RatedSkillItem, SkillRatings, SkillItem, SkillCategory, RulePicture, Rule, \
+    ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
+    Advertisement
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -88,20 +88,6 @@ def resend_registration_email(modeladmin, request, queryset):
     messages.success(request, _translate('Registration email resent'))
 
 
-class ChapterPictureInLine(NestedTabularInline):
-    model = ChapterPicture
-    extra = 0
-    fields = ('picture', 'image_preview')
-    readonly_fields = ('image_preview',)
-
-
-class FinancialInstitutionPictureInLine(NestedTabularInline):
-    model = InstitutionPicture
-    extra = 0
-    fields = ('picture', 'image_preview')
-    readonly_fields = ('image_preview',)
-
-
 class CustomUserAdmin(UserAdmin):
     add_form = RegisterUserForm
     change_form = RegisterUserForm
@@ -156,20 +142,6 @@ class Group(DjangoGroup):
 admin.site.unregister(DjangoGroup)
 
 
-@admin.register(ChapterStaffType)
-class ChapterStaffTypeAdmin(BaseGroupAdmin):
-    list_display = ('name', 'description', 'registry_date', 'registrar')
-    list_display_links = list_display
-    ordering = ('name',)
-    search_fields = ('name',)
-    filter_horizontal = ()
-
-
-@admin.register(Group)
-class GroupAdmin(BaseGroupAdmin):
-    pass
-
-
 @admin.register(Title)
 class TitleAdmin(NestedModelAdmin):
     list_display = ('descriptor',)
@@ -184,73 +156,6 @@ class GenderAdmin(NestedModelAdmin):
     list_display_links = list_display
     ordering = ('descriptor',)
     search_fields = ('descriptor',)
-
-
-class UsefulLinksInline(NestedTabularInline):
-    extra = 0
-    model = UsefulLinks
-    fields = ('name', 'published', 'url')
-    classes = ('collapse',)
-
-
-class ChapterStaffInline(NestedTabularInline):
-    extra = 0
-    model = ChapterStaff
-    fields = ('user_profile', 'department', 'type')
-    classes = ('collapse',)
-
-    verbose_name = "Chapter Staff Member"
-    verbose_name_plural = "Chapter Staff"
-
-
-@admin.register(Department)
-class DepartmentAdmin(NestedModelAdmin):
-    list_display = ('name', 'description', 'registry_date', 'registrar')
-    list_display_links = list_display
-    ordering = ('name',)
-    search_fields = ('name',)
-
-    def get_changeform_initial_data(self, request):
-        get_data = {'registrar': request.user.pk}
-        return get_data
-
-
-@admin.register(Chapter)
-class ChapterAdmin(NestedModelAdmin):
-    list_display = ('name', 'active', 'registry_date', 'registrar')
-    list_display_links = list_display
-    ordering = ('name',)
-    search_fields = ('name',)
-
-    fieldsets = (
-        (None,
-         {
-             'fields': ('name', 'active', 'chapter_pictures')
-         }),
-        ('Registrar', {
-            'classes': ('collapse',),
-            'fields': ('registrar', 'registry_date'),
-        }),
-    )
-
-    inlines = [
-        UsefulLinksInline,
-        ChapterStaffInline,
-        ChapterPictureInLine,
-    ]
-
-    def get_changeform_initial_data(self, request):
-        get_data = super(ChapterAdmin, self).get_changeform_initial_data(request)
-        get_data['registrar'] = request.user.pk
-        return get_data
-
-
-@admin.register(UsefulLinks)
-class UsefulLinksAdmin(NestedModelAdmin):
-    list_display = ('name', 'chapter_link', 'url', 'published', 'registrar', 'registry_date')
-    list_display_links = list_display
-    ordering = ('name',)
-    search_fields = ('name',)
 
 
 class ResourceItemAdminForm(forms.ModelForm):
@@ -458,21 +363,19 @@ class ModuleAssemblyAdmin(NestedModelAdmin):
                      'expiration_units',
                      'time_units',
                      'item_type',
+                     'details',
                      'visual_description',
                      'published',
                      'checked',
                      'achievement_mechanics',
                      'print_duplication',
                      'tags',
+                     'usage_tree',
                  )
          }),
         ('Crafting and Usage', {
             'classes': ('collapse',),
-            'fields': ('crafting_tree', 'crafting_area', 'usage_tree'),
-        }),
-        ('Details', {
-            'classes': ('collapse',),
-            'fields': ('details', 'season'),
+            'fields': ('crafting_tree', 'crafting_area', ),
         }),
         ('Registrar', {
             'classes': ('collapse',),
@@ -539,134 +442,42 @@ class ModuleAssemblyAdmin(NestedModelAdmin):
             form.base_fields['name'].widget.attrs['style'] = 'width: 45em;'
 
         if 'achievement_mechanics' in form.base_fields:
-            form.base_fields['achievement_mechanics'].widget.attrs['style'] = 'width: 45em;'
+            form.base_fields['achievement_mechanics'].widget = Textarea()
+            form.base_fields['achievement_mechanics'].widget.attrs['style'] = 'width: 45em; height: 3em;'
 
         if 'print_duplication' in form.base_fields:
             form.base_fields['print_duplication'].widget.attrs['style'] = 'width: 45em;'
 
+        if 'tags' in form.base_fields:
+            form.base_fields['tags'].widget = Textarea()
+            form.base_fields['tags'].widget.attrs['style'] = 'width: 45em; height: 3em;'
+
         if 'details' in form.base_fields:
-            form.base_fields['details'].widget.attrs['style'] = 'width: 100em; height: 5em;'
+            form.base_fields['details'].widget = Textarea()
+            form.base_fields['details'].widget.attrs['style'] = 'width: 45em; height: 5em;'
+
+        if 'visual_description' in form.base_fields:
+            form.base_fields['visual_description'].widget = Textarea()
+            form.base_fields['visual_description'].widget.attrs['style'] = 'width: 45em; height: 5em;'
 
         return form
-
-
-@admin.register(FinancialInstitution)
-class FinancialInstitutionAdmin(NestedModelAdmin):
-    list_display = ('branch', 'name', 'active', 'published', 'modifier', 'registry_date', 'registrar', 'tags')
-    list_display_links = list_display
-    ordering = ('branch', 'name',)
-    search_fields = ('branch', 'name',)
-    actions = [bulk_tagging]
-
-    inlines = [
-        FinancialInstitutionPictureInLine
-    ]
-
-    fieldsets = (
-        (None,
-         {
-             'fields':
-                 (
-                     'branch',
-                     'name',
-                     'slug',
-                     'text',
-                     'active',
-                     'published',
-                     'modifier',
-                     'tags',
-                 )
-         }),
-        ('Registrar', {
-            'classes': ('collapse',),
-            'fields': ('registrar', 'registry_date',),
-        }),
-    )
-
-    def get_changeform_initial_data(self, request):
-        get_data = super(FinancialInstitutionAdmin, self).get_changeform_initial_data(request)
-        get_data['registrar'] = request.user.pk
-        return get_data
-
-
-@admin.register(FinancialInvestment)
-class FinancialInvestmentAdmin(admin.ModelAdmin):
-    list_display = (
-    'character', 'investment_date', 'institution', 'amount_invested', 'die_roll', 'modifier', 'roll_total',
-    'end_result',)
-    list_display_links = list_display
-    ordering = ('-investment_date', 'institution', 'character', 'amount_invested')
-    # search_fields = ('institution', 'character',)
-    add_form = FinancialInvestmentAddForm
-    change_form_template = "necrotopia/investment_admin.html"
-    add_form_template = "necrotopia/investment_admin.html"
-    readonly_fields = ('die_roll', 'modifier', 'end_result')
-    show_close_button = True
-
-    fieldsets = (
-        (None,
-         {
-             'fields': ('character', 'institution', 'investment_date',)
-         }),
-        ('Results', {
-            'classes': ('expand',),
-            'fields': ('amount_invested', 'die_roll', 'modifier', 'end_result'),
-        }),
-    )
-
-    def institution_modifier(self, request):
-        if type(request) is FinancialInvestment:
-            institution = request.institution
-            return str(FinancialInstitutionModifier(institution.modifier))
-
-    def end_result(self, request):
-        if type(request) is FinancialInvestment:
-            investment_result = InvestmentResult.descriptor_from_die_result(request.roll_total)
-
-            return investment_result
-
-    def each_context(self, request):
-        context = super().each_context(request)
-        context['show_close'] = True
-        return context
-
-    @staticmethod
-    def die_roll_and_save(self, request, obj):
-        if "_roll_investment;" in request.POST:
-            die_string = ''
-            institution = obj.institution
-            if institution.modifier > 0:
-                die_string += "1d6+{modifier}".format(modifier=institution.modifier)
-            elif institution.modifier < 0:
-                die_string += "1d6{modifier}".format(modifier=institution.modifier)
-            else:
-                die_string += "1d6"
-
-            result, explanation = rolldice.roll_dice('1d6')
-            roll_total = result + institution.modifier
-            result_string = InvestmentResult.instructions_from_die_result(roll_total)
-
-            obj.die_roll = result
-            obj.modifier = institution.modifier
-            obj.roll_total = roll_total
-            obj.save()
-            self.message_user(request,
-                              "Rolled: {die_string}={roll_total} [{result_string}]".format(die_string=die_string,
-                                                                                           roll_total=roll_total,
-                                                                                           result_string=result_string))
-        return super().response_change(request, obj)
-
-    def response_change(self, request, obj):
-        return FinancialInvestmentAdmin.die_roll_and_save(self, request, obj)
-
-    def response_add(self, request, obj, post_url_continue=None):
-        return FinancialInvestmentAdmin.die_roll_and_save(self, request, obj)
 
 
 @admin.register(Advertisement)
 class AdvertisementCarouselAdmin(admin.ModelAdmin):
     list_display = ('name', 'published', 'is_active', 'start_date', 'end_date')
     list_display_links = ('name',)
+
+    fieldsets = (
+        (None,
+         {
+             'fields': ('name', 'slug', 'link', 'image', 'published', 'start_date', 'end_date', )
+         }),
+        ('Registrar', {
+            'classes': ('collapse',),
+            'fields': ('registrar', 'registry_date',),
+        }),
+    )
 
     class Meta:
         model = Advertisement
@@ -679,28 +490,4 @@ class AdvertisementCarouselAdmin(admin.ModelAdmin):
         get_data = super(AdvertisementCarouselAdmin, self).get_changeform_initial_data(request)
         get_data['registrar'] = request.user.pk
         get_data['end_date'] = timezone.now() + + timedelta(days=30)
-        return get_data
-
-
-@admin.register(Character)
-class CharacterAdmin(NestedModelAdmin):
-    list_display = ('user', 'name', 'registry_date', 'registrar')
-    list_display_links = list_display
-    ordering = ('user', 'name',)
-    search_fields = ('user', 'name',)
-
-    fieldsets = (
-        (None,
-         {
-             'fields': ('user', 'name', )
-         }),
-        ('Registrar', {
-            'classes': ('collapse',),
-            'fields': ('registrar', 'registry_date',),
-        }),
-    )
-
-    def get_changeform_initial_data(self, request):
-        get_data = super(CharacterAdmin, self).get_changeform_initial_data(request)
-        get_data['registrar'] = request.user.pk
         return get_data

@@ -227,6 +227,10 @@ def search_results(request):
 
         tags = tagging.models.get_tag_list(search_terms)
 
+        chapters_by_name = Chapter.objects.filter(name__icontains=search_terms)
+        chapters_by_abbreviation = Chapter.objects.filter(abbreviation__contains=search_terms)
+        all_chapters_found = chapters_by_name.union(chapters_by_abbreviation).order_by('name')
+
         blueprints_by_name = ModuleAssembly.objects.filter(name__icontains=search_terms)
         blueprints_by_tag = tag_OR_query(model=ModuleAssembly, tags=tags)
         all_blueprints_found = blueprints_by_name.union(blueprints_by_tag).order_by('name')
@@ -247,6 +251,7 @@ def search_results(request):
         context['all_skills_found'] = all_skills_found
         context['all_rules_found'] = all_rules_found
         context['all_resources_found'] = all_resources_found
+        context['all_chapters_found'] = all_chapters_found
         context['search_terms'] = search_terms_list
         context['title'] = GLOBAL_SITE_NAME
 
@@ -327,3 +332,20 @@ def resource_view(request, resource_id):
         'resource': resource,
     }
     return render(request, 'necrotopia/resource_view.html', context=context)
+
+
+def chapter_list(request, chapters):
+    return render(request, 'necrotopia/chapter_list.html', context=chapters)
+
+
+def chapter_view(request, chapter_id):
+    try:
+        chapter = Chapter.objects.get(pk=chapter_id)
+        context = {
+            'chapter': chapter,
+            'title' : GLOBAL_SITE_NAME
+        }
+        return render(request, 'necrotopia/chapter_view.html', context=chapter)
+
+    except Chapter.DoesNotExist:
+        raise Http404("That chapter does not exist")

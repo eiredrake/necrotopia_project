@@ -8,7 +8,12 @@
 {% block content %}
     <div class="container-fluid no-padding">
         {% if search_terms|length > 0 %}
-            {% if all_rules_found|length > 0 or all_blueprints_found|length > 0 or all_skills_found|length > 0 or all_resources_found|length > 0 %}
+            {% if all_rules_found|length > 0 or all_blueprints_found|length > 0 or all_skills_found|length > 0 or all_resources_found|length > 0 or all_chapters_found|length > 0 %}
+                {% if all_chapters_found|length > 0 %}
+                    {% block chapters %}
+                        {%  include 'necrotopia/chapter_list.html' with all_chapters_found=all_chapters_found %}
+                    {% endblock chapters %}
+                {% endif %}
                 {% if all_rules_found|length > 0 %}
                     {% block rules %}
                         {% include 'necrotopia/rules_list.html' with all_rules_found=all_rules_found %}
