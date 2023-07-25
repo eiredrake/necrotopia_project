@@ -433,7 +433,7 @@ class ModuleAssembly(models.Model):
     time_units = models.IntegerField(choices=TimeUnits.choices(), default=TimeUnits.No_Expiration)
     item_type = models.IntegerField(choices=ComponentType.choices(), default=ComponentType.Gizmo)
     achievement_mechanics = models.CharField(blank=True, null=True, max_length=1000, default=_translate('n/a'))
-    print_duplication = models.CharField(blank=True, null=True, max_length=1000, default=_translate('Basic Education, 2x Basic Scrap, 5 Mind, 20 Minutes'))
+    print_duplication = models.CharField(blank=True, null=True, max_length=1000, default=_translate('Basic Education, 2x Basic Herb, 5 Mind, 20 Minutes'))
     details = models.CharField(blank=True, null=True, max_length=1000)
     registration_date = models.DateTimeField('registration_date', default=timezone.now)
     last_update_date = models.DateTimeField('last_update_date', default=timezone.now)
