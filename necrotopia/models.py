@@ -93,6 +93,7 @@ class ComponentType(IntEnum):
     Shield_Augment = 15
     Ranged_Exotic = 16
     Melee_Exotic = 17
+    Knucks = 18
 
     def __str__(self):
         return str(self.name)
