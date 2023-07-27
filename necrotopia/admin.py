@@ -7,6 +7,7 @@ import tagging
 from django.contrib import admin
 from django.contrib.admin.checks import InlineModelAdminChecks
 from django.contrib.admin.helpers import ActionForm
+from django.contrib.admin.options import InlineModelAdmin
 from django.contrib.auth.admin import UserAdmin
 from django.db import models
 from django.forms import TextInput, Textarea
@@ -26,7 +27,7 @@ from necrotopia.forms import RegisterUserForm
 from necrotopia.models import UserProfile, Title, Gender, TimeUnits, \
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
-    Advertisement
+    Advertisement, Wallet, WalletResource, WalletItem
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -491,3 +492,57 @@ class AdvertisementCarouselAdmin(admin.ModelAdmin):
         get_data['registrar'] = request.user.pk
         get_data['end_date'] = timezone.now() + + timedelta(days=30)
         return get_data
+
+
+class WalletResourceInline(NestedTabularInline):
+    extra = 0
+    model = WalletResource
+    fields = ('quantity', 'resource_link', 'acquire_date', 'expiration_date', 'notes')
+
+
+class WalletItemInline(NestedTabularInline):
+    extra = 0
+    model = WalletItem
+    fields = ('quantity', 'module_link', 'name', 'acquire_date', 'expiration_date', 'notes')
+
+
+@admin.register(Wallet)
+class WalletAdmin(NestedModelAdmin):
+    models = Wallet
+    list_display = ('name', 'owner_link', 'creation_date', 'count_of_resources', 'count_of_items')
+    list_display_links = ('name',)
+    readonly_fields = ["creation_date"]
+
+    inlines = [
+        WalletResourceInline,
+        WalletItemInline,
+    ]
+
+    fieldsets = (
+        (None,
+         {
+             'fields': ('name', )
+         }),
+        ('Ownership', {
+            'classes': ('collapse',),
+            'fields': ('owner_link', 'creation_date',),
+        }),
+    )
+
+    @admin.display(description='Resources')
+    def count_of_resources(self, obj: Wallet) -> int:
+        resources = WalletResource.objects.filter(wallet_link=obj)
+        return resources.count()
+
+    @admin.display(description='Items')
+    def count_of_items(self, obj: Wallet) -> int:
+        items = WalletItem.objects.filter(wallet_link=obj)
+        return items.count()
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(WalletAdmin, self).get_changeform_initial_data(request)
+        get_data['owner_link'] = request.user.pk
+        get_data['creation_date'] = timezone.now()
+
+        return get_data
+

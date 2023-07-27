@@ -518,6 +518,7 @@ class LootTable(models.Model):
     def __str__(self):
         return self.name
 
+
 class Advertisement(models.Model):
     name = models.CharField(max_length=60, default='', blank=True)
     slug = models.TextField(max_length=100, default='', blank=True)
@@ -541,3 +542,39 @@ class Advertisement(models.Model):
         ordering = ["name"]
         verbose_name = 'Advertisement'
         verbose_name_plural = 'Advertisements'
+
+
+class WalletObjectBase(models.Model):
+    quantity = models.PositiveIntegerField(default=1, null=False)
+    acquire_date = models.DateField(default=timezone.now, null=False)
+    expiration_date = models.DateField(null=True)
+    notes = models.CharField(default='', blank=True, null=True, max_length=255)
+    wallet_link = models.ForeignKey('Wallet', blank=False, null=False, on_delete=models.CASCADE)
+
+
+class WalletResource(WalletObjectBase):
+    resource_link = models.ForeignKey(ResourceItem, null=False, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return ''
+
+
+class WalletItem(WalletObjectBase):
+    module_link = models.ForeignKey(ModuleAssembly, null=False, on_delete=models.CASCADE)
+    name = models.CharField(default='', blank=True, null=True)
+
+    def __str__(self):
+        return ''
+
+
+class Wallet(models.Model):
+    name = models.CharField(default='New Wallet', blank=False, null=False)
+    owner_link = models.ForeignKey(UserProfile, null=False, on_delete=models.CASCADE)
+    resources = models.ForeignKey(WalletResource, on_delete=models.CASCADE, blank=True, null=True,
+                                      related_name='wallet_resources')
+    creation_date = models.DateTimeField(default=timezone.now, null=False)
+    items = models.ForeignKey(WalletItem, null=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
