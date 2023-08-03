@@ -503,7 +503,7 @@ class WalletResourceInline(NestedTabularInline):
 class WalletItemInline(NestedTabularInline):
     extra = 0
     model = WalletItem
-    fields = ('quantity', 'module_link', 'name', 'acquire_date', 'expiration_date', 'notes')
+    fields = ('quantity', 'grade', 'module_link', 'acquire_date', 'expiration_date', 'notes')
 
 
 @admin.register(Wallet)
@@ -512,6 +512,8 @@ class WalletAdmin(NestedModelAdmin):
     list_display = ('name', 'owner_link', 'creation_date', 'count_of_resources', 'count_of_items')
     list_display_links = ('name',)
     readonly_fields = ["creation_date"]
+
+    # change_form_template = "admin/necrotopia/wallet/change_form.html"
 
     inlines = [
         WalletResourceInline,
