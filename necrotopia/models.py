@@ -547,7 +547,7 @@ class Advertisement(models.Model):
 class WalletObjectBase(models.Model):
     quantity = models.PositiveIntegerField(default=1, null=False)
     acquire_date = models.DateField(default=timezone.now, null=False)
-    expiration_date = models.DateField(null=True)
+    expiration_date = models.CharField(default='', null=True, blank=True, max_length=10)
     notes = models.CharField(default='', blank=True, null=True, max_length=255)
     wallet_link = models.ForeignKey('Wallet', blank=False, null=False, on_delete=models.CASCADE)
 
@@ -561,7 +561,7 @@ class WalletResource(WalletObjectBase):
 
 class WalletItem(WalletObjectBase):
     module_link = models.ForeignKey(ModuleAssembly, null=False, on_delete=models.CASCADE)
-    name = models.CharField(default='', blank=True, null=True)
+    grade = models.IntegerField(choices=Grade.choices(), default=Grade.Basic)
 
     def __str__(self):
         return ''
