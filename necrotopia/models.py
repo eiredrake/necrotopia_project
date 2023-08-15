@@ -223,6 +223,16 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
+class ProxyUser(UserProfile):
+    pass
+
+    class Meta:
+        app_label = 'auth'
+        proxy = True
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+
+
 class ResourceItem(models.Model):
     name = models.CharField(max_length=255, unique=False)
     expiration_units = models.SmallIntegerField(default=6, blank=True, null=True)
