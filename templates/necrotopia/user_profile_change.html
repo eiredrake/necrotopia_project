@@ -42,12 +42,12 @@
                             </div>
                         </nav>
                         <div class="tab-content" id="nav-tabContent">
-                            <div id="nav-personal" class="tab-pane fade show active" role="tabpanel"
-                                 aria-labelledby="nav-personal-tab">
+                            <div id="nav-personal" class="tab-pane fade show active" role="tabpanel"  aria-labelledby="nav-personal-tab">
                                 {{ form.display_name|as_crispy_field }}
                                 {{ form.full_name|as_crispy_field }}
                                 {{ form.title|as_crispy_field }}
                                 {{ form.gender|as_crispy_field }}
+                                {{ form.pronouns|as_crispy_field }}
                             </div>
                             <div id="nav-nada" class="tab-pane fade" role="tabpanel" aria-labelledby="nav-nada-tab">
                                 {{ form.display_game_advertisements|as_crispy_field }}
