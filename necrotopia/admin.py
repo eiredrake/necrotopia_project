@@ -27,7 +27,7 @@ from necrotopia.forms import RegisterUserForm
 from necrotopia.models import UserProfile, Title, Gender, TimeUnits, \
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
-    Advertisement, Wallet, WalletResource, WalletItem
+    Advertisement, Wallet, WalletResource, WalletItem, ProxyUser
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -36,6 +36,7 @@ from django.contrib import messages
 from necrotopia.views import send_registration_email
 from necrotopia_project.settings import GLOBAL_SITE_NAME
 from functools import partial as curry
+from django.contrib.auth.models import AbstractUser
 
 
 @admin.action(description='Set the tags of all selected items.')
@@ -125,22 +126,7 @@ class CustomUserAdmin(UserAdmin):
     actions = [deactivate_user, resend_registration_email]
 
 
-admin.site.register(UserProfile, CustomUserAdmin)
-
-
-class Group(DjangoGroup):
-    """Instead of trying to get new user under existing `Aunthentication and Authorization`
-    banner, create a proxy group model under our Accounts app label.
-    Refer to: https://github.com/tmm/django-username-email/blob/master/cuser/admin.py
-    """
-
-    class Meta:
-        verbose_name = _translate('group')
-        verbose_name_plural = _translate('groups')
-        proxy = True
-
-
-admin.site.unregister(DjangoGroup)
+admin.site.register(ProxyUser, CustomUserAdmin)
 
 
 @admin.register(Title)
