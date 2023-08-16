@@ -56,7 +56,6 @@ class UserProfileForm(forms.ModelForm):
     display_name = forms.CharField(label=_translate('Display Name'), widget=forms.TextInput, required=True,)
     full_name = forms.CharField(label=_translate("Full Name"), widget=forms.TextInput, required=False)
     pronouns = forms.CharField(label=_translate("Pronouns"), widget=forms.TextInput, required=False)
-
     display_game_advertisements = forms.BooleanField(label=_translate('Display Game Advertisements'), required=False)
 
     class Meta:
