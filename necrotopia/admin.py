@@ -27,7 +27,7 @@ from necrotopia.forms import RegisterUserForm
 from necrotopia.models import UserProfile, Title, Gender, TimeUnits, \
     ResourceItem, RatedSkillItem, SkillRatings, SkillItem, SkillCategory, RulePicture, Rule, \
     ItemPicture, ModuleGrade, ModuleGradeResource, ModuleGradeSubAssembly, ModuleAssembly, ItemPdf, \
-    Advertisement, Wallet, WalletResource, WalletItem, ProxyUser
+    Advertisement, Wallet, WalletResource, WalletItem, ProxyUser, ItemCard, ItemCardFace
 from django import forms
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -263,7 +263,7 @@ class RuleAdminForm(forms.ModelForm):
 
 @admin.register(Rule)
 class RuleAdmin(NestedModelAdmin):
-    list_display = ('name', 'partial_slug', 'reference', 'tags')
+    list_display = ('name', 'partial_slug', 'last_update_date', 'registrar', 'registration_date', 'reference', 'tags')
     list_display_links = list_display
     inlines = [
         RulePictureInLine,
@@ -272,19 +272,22 @@ class RuleAdmin(NestedModelAdmin):
     fieldsets = (
         (None,
          {
-             'fields': ('name', 'reference', 'slug', 'text', 'tags')
+             'fields': ('name', 'reference', 'slug', 'text', 'tags', 'last_update_date')
          }),
-        ('Creator', {
+        ('Registration', {
             'classes': ('collapse',),
-            'fields': ('creator', 'creation_date'),
+            'fields': ('registrar', 'registration_date'),
         }),
     )
 
     actions = [bulk_tagging]
 
-
     def get_changeform_initial_data(self, request):
-        get_data = {'creator': request.user.pk}
+        get_data = {
+                'creator': request.user.pk,
+                'last_update_date': timezone.now(),
+             }
+
         return get_data
 
     def images(self, obj):
@@ -534,3 +537,45 @@ class WalletAdmin(NestedModelAdmin):
 
         return get_data
 
+
+class ItemCardInLine(NestedTabularInline):
+    model = ItemCardFace
+    extra = 0
+    fields = ('card_side', 'image', 'image_preview')
+    readonly_fields = ('image_preview', )
+
+
+@admin.register(ItemCard)
+class ItemCardAdmin(NestedModelAdmin):
+    models = ItemCard
+    list_display = ('item_type', 'published', 'has_front', 'has_back', 'registrar', 'registry_date')
+    list_display_links = ('item_type', )
+    readonly_fields = ['registry_date', 'has_front', 'has_back']
+
+    inlines = [ItemCardInLine, ]
+
+    fieldsets = (
+        (None,
+         {
+             'fields': ('item_type', 'published')
+         }),
+        ('Ownership', {
+            'classes': ('collapse',),
+            'fields': ('registrar', 'registry_date',),
+        }),
+    )
+
+    @admin.display(description='Has Front', boolean=True)
+    def has_front(self, obj: ItemCard) -> bool:
+        return obj.has_front()
+
+    @admin.display(description='Has Back', boolean=True)
+    def has_back(self, obj: ItemCard) -> bool:
+        return obj.has_back()
+
+    def get_changeform_initial_data(self, request):
+        get_data = super(ItemCardAdmin, self).get_changeform_initial_data(request)
+        get_data['registrar'] = request.user.pk
+        get_data['registry_date'] = timezone.now()
+
+        return get_data
