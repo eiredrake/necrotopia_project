@@ -1,6 +1,6 @@
 from datetime import timedelta
 from enum import IntEnum
-from typing import TypedDict
+from typing import TypedDict, cast
 
 import PIL
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser, Group, Permission, User, \
@@ -23,6 +23,15 @@ from necrotopia.managers import CustomUserManager
 from necrotopia.tools import ImageTool
 
 USERNAME_FIELD = 'email'
+
+
+class CardSide(IntEnum):
+    Front = 1
+    Back = 2
+
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.name) for key in cls]
 
 
 class Months(IntEnum):
@@ -350,8 +359,9 @@ class Rule(models.Model):
     reference = models.CharField(max_length=255, unique=False, blank=True, null=True)
     slug = models.CharField(max_length=255, unique=False, blank=True, null=True)
     text = models.CharField(max_length=2048, unique=False, blank=True, null=True)
-    creation_date = models.DateTimeField('creation_date', default=timezone.now)
-    creator = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    last_update_date = models.DateTimeField('last_update_date', default=timezone.now)
+    registration_date = models.DateTimeField('registration_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     pictures = models.ForeignKey(RulePicture, blank=True, null=True, on_delete=models.CASCADE, related_name='pictures')
     tags = TagField()
 
@@ -588,3 +598,43 @@ class Wallet(models.Model):
     def __str__(self):
         return self.name
 
+
+class ItemCardFace(models.Model):
+    card_side = models.IntegerField(choices=CardSide.choices(), default=CardSide.Front)
+    image = models.ImageField(upload_to='item_card_faces')
+    img_parent_card = models.ForeignKey("ItemCard", blank=False, null=False, on_delete=models.CASCADE, related_name='img_image_parent_card')
+
+    def image_preview(self):
+        if self.image:
+            return mark_safe(
+                '<a href="%s"><img src="%s" width="200" height="150" /></a>' % (self.image.url, self.image.url))
+        else:
+            return '(No image)'
+
+
+def restrict_number_of_faces(value):
+    parent = ItemCard.objects.filter(pk=value).get()
+    if parent.card_faces.count() >= 2:
+        raise ValidationError(_translate('You may only have two card faces'))
+
+
+class ItemCard(models.Model):
+    item_type = models.IntegerField(choices=ComponentType.choices(), default=ComponentType.Gizmo)
+    published = models.BooleanField(default=False)
+    registry_date = models.DateTimeField('registry_date', default=timezone.now)
+    registrar = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    def has_front(self):
+        return self.has_facing(CardSide.Front)
+
+    def has_back(self):
+        return self.has_facing(CardSide.Back)
+
+    def has_facing(self, card_side: CardSide) -> bool:
+        facing = ItemCardFace.objects.filter(img_parent_card_id=self.pk).filter(
+            card_side__exact=card_side).first()
+
+        return facing is not None
+
+    def __str__(self):
+        return "{card_type} Card".format(card_type=ComponentType(self.item_type).name)
