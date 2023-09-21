@@ -284,7 +284,7 @@ class RuleAdmin(NestedModelAdmin):
 
     def get_changeform_initial_data(self, request):
         get_data = {
-                'creator': request.user.pk,
+                'registrar': request.user.pk,
                 'last_update_date': timezone.now(),
              }
 
